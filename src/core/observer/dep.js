@@ -52,6 +52,8 @@ export default class Dep {
 // The current target watcher being evaluated.
 // This is globally unique because only one watcher
 // can be evaluated at a time.
+
+// Dep.target 保存要被收集的依赖(观察者)
 Dep.target = null
 const targetStack = []
 

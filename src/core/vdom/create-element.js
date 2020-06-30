@@ -20,8 +20,8 @@ import {
   simpleNormalizeChildren
 } from './helpers/index'
 
-const SIMPLE_NORMALIZE = 1
-const ALWAYS_NORMALIZE = 2
+const SIMPLE_NORMALIZE = 1 // 模板编译成的 render 函数使用
+const ALWAYS_NORMALIZE = 2 // 用户手写 render 方法使用
 
 // wrapper function for providing a more flexible interface
 // without getting yelled at by flow
@@ -38,7 +38,7 @@ export function createElement (
     children = data
     data = undefined
   }
-  if (isTrue(alwaysNormalize)) {
+  if (isTrue(alwaysNormalize)) {  // 用户手写 render 方法使用
     normalizationType = ALWAYS_NORMALIZE
   }
   return _createElement(context, tag, data, children, normalizationType)
@@ -87,9 +87,9 @@ export function _createElement (
     data.scopedSlots = { default: children[0] }
     children.length = 0
   }
-  if (normalizationType === ALWAYS_NORMALIZE) {
+  if (normalizationType === ALWAYS_NORMALIZE) { // 用户手写 render 方法使用
     children = normalizeChildren(children)
-  } else if (normalizationType === SIMPLE_NORMALIZE) {
+  } else if (normalizationType === SIMPLE_NORMALIZE) { // 模板编译成的 render 函数使用
     children = simpleNormalizeChildren(children)
   }
   let vnode, ns

@@ -34,14 +34,17 @@ export function initLifecycle (vm: Component) {
 
   // locate first non-abstract parent
   let parent = options.parent
+  // 查找第一个非抽象的父组件
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
     }
+    // 将parent组件 作为当前实例的父级
     parent.$children.push(vm)
   }
-
+  // 设置当前实例的 $parent 属性，指向父级
   vm.$parent = parent
+  // 设置 $root 属性，有父级就是用父级的 $root，否则 $root 指向自身
   vm.$root = parent ? parent.$root : vm
 
   vm.$children = []
@@ -55,6 +58,7 @@ export function initLifecycle (vm: Component) {
   vm._isBeingDestroyed = false
 }
 
+//原型挂载 _update，$forceUpdate,$destroy 方法
 export function lifecycleMixin (Vue: Class<Component>) {
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
@@ -109,7 +113,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
       remove(parent.$children, vm)
     }
-    // teardown watchers 
+    // teardown watchers
     // 拆卸 watchers
     if (vm._watcher) {
       vm._watcher.teardown()
@@ -132,7 +136,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // fire destroyed hook
     callHook(vm, 'destroyed') // 调用 destroyed 钩子
     // turn off all instance listeners.
-    vm.$off() //接触实例所有绑定的 listeners 
+    vm.$off() //接触实例所有绑定的 listeners
     // remove __vue__ reference
     // 删除 __vue__ 引用
     if (vm.$el) {

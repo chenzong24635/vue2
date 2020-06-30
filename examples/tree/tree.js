@@ -71,5 +71,5 @@ var demo = new Vue({
   el: '#demo',
   data: {
     treeData: data
-  }
+  },
 })

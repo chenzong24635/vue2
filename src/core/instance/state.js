@@ -46,16 +46,22 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 }
 
 export function initState (vm: Component) {
+  // 存储所有该组件实例的 watcher 对象
   vm._watchers = []
   const opts = vm.$options
+  // 初始化 props 选项
   if (opts.props) initProps(vm, opts.props)
+  // 初始化 methods  选项
   if (opts.methods) initMethods(vm, opts.methods)
+  // 初始化 data  选项
   if (opts.data) {
     initData(vm)
   } else {
     observe(vm._data = {}, true /* asRootData */)
   }
   if (opts.computed) initComputed(vm, opts.computed)
+
+  // 判断 opts.watch 是否存在 且 是不是原生的 watch 对象（Firefox 中原生提供了 Object.prototype.watch 函数）
   if (opts.watch && opts.watch !== nativeWatch) {
     initWatch(vm, opts.watch)
   }
@@ -127,6 +133,9 @@ function initData (vm: Component) {
   const props = vm.$options.props
   const methods = vm.$options.methods
   let i = keys.length
+
+  // 属性定义优先级
+  // props > methods > data
   while (i--) {
     const key = keys[i]
     if (process.env.NODE_ENV !== 'production') {
@@ -325,6 +334,7 @@ export function stateMixin (Vue: Class<Component>) {
   const propsDef = {}
   propsDef.get = function () { return this._props }
   if (process.env.NODE_ENV !== 'production') {
+    // 不是生产环境 不可修改 $data 和 $props
     dataDef.set = function () {
       warn(
         'Avoid replacing instance root $data. ' +
@@ -336,6 +346,8 @@ export function stateMixin (Vue: Class<Component>) {
       warn(`$props is readonly.`, this)
     }
   }
+
+  // 原型挂载 $data $props $set $delete $watch方法
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 

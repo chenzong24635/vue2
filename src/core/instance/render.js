@@ -19,6 +19,8 @@ import { isUpdatingChildComponent } from './lifecycle'
 export function initRender (vm: Component) {
   vm._vnode = null // the root of the child tree
   vm._staticTrees = null // v-once cached trees
+
+  // slot插槽处理
   const options = vm.$options
   const parentVnode = vm.$vnode = options._parentVnode // the placeholder node in parent tree
   const renderContext = parentVnode && parentVnode.context
@@ -28,10 +30,23 @@ export function initRender (vm: Component) {
   // so that we get proper render context inside it.
   // args order: tag, data, children, normalizationType, alwaysNormalize
   // internal version is used by render functions compiled from templates
-  vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false) // 模板编译成的 render 函数使用
+ // 模板编译成的 render 函数使用
+  vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false)
+
   // normalization is always applied for the public version, used in
   // user-written render functions.
-  vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true) // 用户手写 render 方法使用
+  // 用户手写 render 方法使用
+  vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true)
+/*  你可以在vue文件里直接调用
+  render() {
+    return this.$createElement('h2', 'Title')
+  },
+  但一般这么写
+  render(h) {
+    return h('h2', 'Title')
+  },
+  */
+
 
   // $attrs & $listeners are exposed for easier HOC creation.
   // they need to be reactive so that HOCs using them are always updated
@@ -58,6 +73,7 @@ export function setCurrentRenderingInstance (vm: Component) {
   currentRenderingInstance = vm
 }
 
+// 原型挂载 $nextTick，_render 方法
 export function renderMixin (Vue: Class<Component>) {
   // install runtime convenience helpers
   installRenderHelpers(Vue.prototype)

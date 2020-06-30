@@ -12,10 +12,14 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 
 let uid = 0
 
+
+// 在Vue的原型上增加_init方法，构造Vue实例的时候会调用这个_init方法来初始化Vue实例
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
+    // 声明常量 vm 为 this 即Vue实例
     const vm: Component = this
     // a uid
+    // 给每个Vue实例添加唯一标识 uid
     vm._uid = uid++
 
     let startTag, endTag
@@ -27,12 +31,16 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     // a flag to avoid this being observed
+    // 一个防止vm实例自身被观察的标志位
     vm._isVue = true
     // merge options
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
+      //优化内部组件实例化
+      //因为动态选项合并非常慢，
+      //而且没有内部组件选项需要特殊处理。
       initInternalComponent(vm, options)
     } else {
       vm.$options = mergeOptions(
@@ -49,13 +57,28 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    initLifecycle(vm) // 初始化生命周期,主要就是给vm对象添加了 $parent、$root、$children,$ref等属性
-    initEvents(vm) // 初始化事件相关的属性
-    initRender(vm) // 初始化渲染，定义$createElement
-    callHook(vm, 'beforeCreate') // 调用beforeCreate钩子
-    initInjections(vm) // resolve injections before data/props  //注入数据并做响应化
-    initState(vm) //初始化props,data,methods,computed,watch等
-    initProvide(vm) // resolve provide after data/props //处理注入数据
+    // 初始化生命周期,主要就是给vm对象添加了 $parent、$root、$children,$ref等属性
+    initLifecycle(vm)
+
+    // 初始化事件相关的属性
+    // 在 vm 实例对象上添加属性 _events 和 _hasHookEvent属性
+    initEvents(vm)
+
+    // 初始化渲染，vm实例添加vnode 和 _staticTrees, $attrs , $listeners等实例属性，定义_c,$createElements实例方法
+    initRender(vm)
+
+    // 调用 beforeCreate 钩子
+    callHook(vm, 'beforeCreate')
+
+    //注入数据并做响应化（在data，prop属性初始化之前
+    initInjections(vm) // resolve injections before data/props
+    //初始化props,methods,data,computed,watch等
+
+    initState(vm)
+    //处理注入数据（在data，prop属性初始化之后
+    initProvide(vm) // resolve provide after data/props
+
+    // 调用 created 钩子
     callHook(vm, 'created')
 
     /* istanbul ignore if */
@@ -64,7 +87,7 @@ export function initMixin (Vue: Class<Component>) {
       mark(endTag)
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
-
+    // 挂载组件
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }

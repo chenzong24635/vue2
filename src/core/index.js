@@ -21,6 +21,8 @@ Object.defineProperty(Vue, 'FunctionalRenderContext', {
   value: FunctionalRenderContext
 })
 
+// 存储当前 Vue 的版本号
+// scripts\config.js 里会替换
 Vue.version = '__VERSION__'
 
 export default Vue

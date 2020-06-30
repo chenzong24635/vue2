@@ -10,6 +10,10 @@ export const unicodeRegExp = /a-zA-Z\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u037
 /**
  * Check if a string starts with $ or _
  */
+
+// isReserved 函数通过判断一个字符串的第一个字符是不是 $ 或 _ 来决定其是否是保留的，
+// Vue 是不会代理那些键名以 $ 或 _ 开头的字段的，
+// 因为 Vue 自身的属性和方法都是以 $ 或 _ 开头的，所以这么做是为了避免与 Vue 自身的属性和方法相冲突。
 export function isReserved (str: string): boolean {
   const c = (str + '').charCodeAt(0)
   return c === 0x24 || c === 0x5F
@@ -18,6 +22,7 @@ export function isReserved (str: string): boolean {
 /**
  * Define a property.
  */
+// 设置属性不可枚举
 export function def (obj: Object, key: string, val: any, enumerable?: boolean) {
   Object.defineProperty(obj, key, {
     value: val,
