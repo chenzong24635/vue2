@@ -40,6 +40,7 @@ let timerFunc
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
+  // 如果支持Promise(最优的选择)
   const p = Promise.resolve()
   timerFunc = () => {
     p.then(flushCallbacks)
@@ -59,6 +60,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   // Use MutationObserver where native Promise is not available,
   // e.g. PhantomJS, iOS7, Android 4.4
   // (#6466 MutationObserver is unreliable in IE11)
+  // 如果支持MutationObserver，则实例化一个观察者对象，观察文本节点发生变化时，触发执行所有回调函数。
   let counter = 1
   const observer = new MutationObserver(flushCallbacks)
   const textNode = document.createTextNode(String(counter))
@@ -74,12 +76,18 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   // Fallback to setImmediate.
   // Technically it leverages the (macro) task queue,
   // but it is still a better choice than setTimeout.
+  // setImmediate 从技术上讲，它利用了（宏）任务队列，
+  // 但它仍然是比setTimeout更好的选择。
   timerFunc = () => {
+    // setImmediate 拥有比 setTimeout 更好的性能
+    // 因为setTimeout 在将回调注册为 (macro)task 之前要不停的做超时检测，而 setImmediate 则不需要
+    // 仅IE支持
     setImmediate(flushCallbacks)
   }
 } else {
   // Fallback to setTimeout.
   timerFunc = () => {
+    // 都不支持使用setTimeout
     setTimeout(flushCallbacks, 0)
   }
 }
@@ -97,9 +105,9 @@ export function nextTick (cb?: Function, ctx?: Object) {
       _resolve(ctx)
     }
   })
-  if (!pending) {
+  if (!pending) { // 回调队列是否空闲
     pending = true
-    timerFunc()
+    timerFunc()  // 执行时会调用flushCallbacks， 将pending设为false
   }
   // $flow-disable-line
   if (!cb && typeof Promise !== 'undefined') {
@@ -108,3 +116,17 @@ export function nextTick (cb?: Function, ctx?: Object) {
     })
   }
 }
+
+// nextTick主要使用了宏任务和微任务。根据执行环境分别尝试采用
+// * Promise
+// * MutationObserver
+// * setImmediate
+// * 以上都不支持，最后再使用 setTimeout
+
+// 任务队列总体可分为 宏任务 (macro)task，微任务 microtask
+// 当调用栈空闲后每次事件循环只会从 (macro)task 中读取一个任务并执行，
+// 而在同一次事件循环内会将 microtask 队列中所有的任务全部执行完毕，且要先于下一个 (macro)task。
+// 另外 (macro)task 中两个不同的任务之间可能穿插着UI的重渲染，
+// (macro)task -> microtask -> UI重新渲染 -> 下一个(macro)task
+// 那么我们只需要在 microtask 中把所有在 UI重新渲染 之前需要更新的数据全部更新，这样只需要一次重渲染就能得到最新的DOM了 ，
+// 所以要优先选用 microtask 去更新数据状态而不是 (macro)task

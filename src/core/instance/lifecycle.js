@@ -150,7 +150,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
-// $mount 方法会调用的方法
+// $mount 调用mountComponent
 // mountComponent 核心就是先实例化一个渲染Watcher
 // 在它的回调函数中会调用 updateComponent 方法
 // 两个核心方法 vm._render(生成虚拟Dom) 和 vm._update(映射到真实Dom)
@@ -186,15 +186,16 @@ export function mountComponent (
   /* istanbul ignore if */
   if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
     updateComponent = () => {
-      // 将虚拟 Dom 映射到真实 Dom 的函数。
-      // vm._update 之前会先调用 vm._render() 函数渲染 VNode
+      // 将虚拟 VNode 映射到真实 Dom
+      // vm._render() 生成虚拟节点(VNode)
+      // vm._update 将虚拟节点渲染成真正的 DOM
       const name = vm._name
       const id = vm._uid
       const startTag = `vue-perf-start:${id}`
       const endTag = `vue-perf-end:${id}`
 
       mark(startTag)
-      const vnode = vm._render() // 渲染 VNode
+      const vnode = vm._render()
       mark(endTag)
       measure(`vue ${name} render`, startTag, endTag)
 
@@ -205,7 +206,7 @@ export function mountComponent (
     }
   } else {
     updateComponent = () => {
-      vm._update(vm._render(), hydrating) // 渲染 VNode
+      vm._update(vm._render(), hydrating)
     }
   }
 
@@ -216,7 +217,7 @@ export function mountComponent (
     before () {
       // 先判断是否 mouted 完成 并且没有被 destroyed
       if (vm._isMounted && !vm._isDestroyed) {
-        callHook(vm, 'beforeUpdate')
+        callHook(vm, 'beforeUpdate') // 执行 beforeUpdate 钩子函数
       }
     }
   }, true /* isRenderWatcher */)
@@ -354,6 +355,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
 
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
+  // 避免在某些生命周期钩子中使用 props 数据导致收集冗余的依赖
   pushTarget()
   const handlers = vm.$options[hook]
   const info = `${hook} hook`
@@ -362,7 +364,12 @@ export function callHook (vm: Component, hook: string) {
       invokeWithErrorHandling(handlers[i], vm, null, vm, info)
     }
   }
-  if (vm._hasHookEvent) {
+  if (vm._hasHookEvent) { // events.js 的 initEvents 设置
+    // 若组件存在对子组件生命周期钩子的事件侦听器时，触发监听
+    /*   <child
+      @hook:created="handleChildCreated"
+      @hook:mounted="handleChildMounted"
+    /> */
     vm.$emit('hook:' + hook)
   }
   popTarget()

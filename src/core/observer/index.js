@@ -202,12 +202,12 @@ export function defineReactive (
       // 如果对象拥有getter方法则执行
       const value = getter ? getter.call(obj) : val
       // 获取属性时，收集依赖
-      // Dep.target 保存要被收集的依赖(观察者)
+      // Dep.target（watcher 实例） 通过 watch.js 的 Watcher 的get里调用 pushTarget（dep.js） 函数定义
       // 如果Dep.target 存在，收集依赖
       if (Dep.target) {
         dep.depend()
         if (childOb) {
-          childOb.dep.depend()
+          childOb.dep.depend() // 调用 dep.depend 方法收集依赖
           // 如果读取的属性值是数组，那么需要调用 dependArray 函数逐个触发数组每个元素的依赖收集
           if (Array.isArray(value)) {
             dependArray(value)

@@ -183,7 +183,9 @@ function initComputed (vm: Component, computed: Object) {
 
   for (const key in computed) {
     const userDef = computed[key]
+    // 计算属性有两种写法：函数，对象
     const getter = typeof userDef === 'function' ? userDef : userDef.get
+    // 提示你计算属性没有对应的 getter
     if (process.env.NODE_ENV !== 'production' && getter == null) {
       warn(
         `Getter is missing for computed property "${key}".`,
@@ -204,6 +206,8 @@ function initComputed (vm: Component, computed: Object) {
     // component-defined computed properties are already defined on the
     // component prototype. We only need to define computed properties defined
     // at instantiation here.
+    // 检查计算属性是否已定义
+    // 重名则报错
     if (!(key in vm)) {
       defineComputed(vm, key, userDef)
     } else if (process.env.NODE_ENV !== 'production') {
@@ -315,13 +319,37 @@ function createWatcher (
   handler: any,
   options?: Object
 ) {
+  // 为普通对象时
   if (isPlainObject(handler)) {
     options = handler
     handler = handler.handler
   }
+  /* 例
+  watch: {
+    'name':
+    {
+      handler () {
+        console.log('name change')
+      },
+      immediate: true
+    }
+  */
+
+  // 为字符串时,指向 methods 选项中同名函数作为回调函数
   if (typeof handler === 'string') {
     handler = vm[handler]
   }
+  /* 例
+  watch: {
+    name: 'handleNameChange'
+  },
+  methods: {
+    handleNameChange () {
+      console.log('name change')
+    }
+  }
+  */
+
   return vm.$watch(expOrFn, handler, options)
 }
 
@@ -364,9 +392,9 @@ export function stateMixin (Vue: Class<Component>) {
       return createWatcher(vm, expOrFn, cb, options)
     }
     options = options || {}
-    options.user = true
+    options.user = true // 表示这观察者实例是用户创建的
     const watcher = new Watcher(vm, expOrFn, cb, options)
-    if (options.immediate) {
+    if (options.immediate) { // 立即执行该watch
       try {
         cb.call(vm, watcher.value)
       } catch (error) {

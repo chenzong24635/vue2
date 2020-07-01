@@ -72,4 +72,5 @@ var demo = new Vue({
   data: {
     treeData: data
   },
+  // template: '<div id="bar">副处长{{treeData}}</div>'
 })

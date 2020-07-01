@@ -35,10 +35,17 @@ Vue.prototype.$mount = function (
   // resolve template/el and convert to render function
   // 如果没有定义 render 方法，则会把 el 或者 template 字符串转换成 render 方法
   //Vue 2.0 版本中，所有 Vue 的组件的渲染最终都需要 render 方法，无论我们是用单文件 .vue 方式开发组件，还是写了 el 或者 template 属性，最终都会转换成 render 方法
+
+  // 优先级：options.render > options.template > options.el
   if (!options.render) {
+    // options.render 选项不存在时，使用 template 或 el 选项构建渲染函数
     let template = options.template
+
+    // template存在
     if (template) {
+      // template是字符串
       if (typeof template === 'string') {
+        // 如果第一个字符是 #，那么会把该字符串作为 css 选择符去选中对应的元素，并把该元素的 innerHTML 作为模板
         if (template.charAt(0) === '#') {
           template = idToTemplate(template)
           /* istanbul ignore if */
@@ -50,6 +57,8 @@ Vue.prototype.$mount = function (
           }
         }
       } else if (template.nodeType) {
+        // template 的类型是元素节点,
+        // 则使用该元素的 innerHTML 作为模板
         template = template.innerHTML
       } else {
         if (process.env.NODE_ENV !== 'production') {
@@ -58,14 +67,16 @@ Vue.prototype.$mount = function (
         return this
       }
     } else if (el) {
+      // template不存在，el存在
       template = getOuterHTML(el)
     }
+    // 此时 template 是一个模板字符串，将来用于渲染函数的生成
     if (template) {
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
         mark('compile')
       }
-
+      // 将template 模板字符串编译为渲染函数(render)
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
         shouldDecodeNewlines,

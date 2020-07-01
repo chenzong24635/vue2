@@ -63,7 +63,7 @@ export default class Watcher {
     // options
     if (options) {
       this.deep = !!options.deep
-      this.user = !!options.user
+      this.user = !!options.user // 用户创建的 watch 实例
       this.lazy = !!options.lazy
       this.sync = !!options.sync
       this.before = options.before
@@ -73,7 +73,7 @@ export default class Watcher {
     this.cb = cb
     this.id = ++uid // uid for batching
     this.active = true
-    this.dirty = this.lazy // for lazy watchers
+    this.dirty = this.lazy // for lazy watchers 计算属性是惰性求值
     this.deps = []
     this.newDeps = []
     this.depIds = new Set()
@@ -82,6 +82,7 @@ export default class Watcher {
       ? expOrFn.toString()
       : ''
     // parse expression for getter
+    // 把表达式expOrFn解析成getter
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
@@ -104,11 +105,21 @@ export default class Watcher {
   /**
    * Evaluate the getter, and re-collect dependencies.
    */
+  // 依赖收集
   get () {
+    // 将自身 watcher观察者实例 赋值给Dep.target，用以依赖收集
     pushTarget(this)
     let value
     const vm = this.vm
     try {
+      /*
+        执行了getter操作，看似执行了渲染操作，其实是执行了依赖收集。
+        在将Dep.target设置为自生观察者实例以后，执行getter操作。
+        譬如说现在的的data中可能有a、b、c三个数据，getter渲染需要依赖a跟c，
+        那么在执行getter的时候就会触发a跟c两个数据的getter函数，
+        在getter函数中即可判断Dep.target是否存在然后完成依赖收集，
+        将该观察者对象放入闭包中的Dep的subs中去。
+      */
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -123,6 +134,7 @@ export default class Watcher {
         traverse(value)
       }
       popTarget()
+      // 清空 newDepIds 属性和 newDeps
       this.cleanupDeps()
     }
     return value
@@ -133,11 +145,12 @@ export default class Watcher {
    */
   addDep (dep: Dep) {
     const id = dep.id
+    // 防止重复收集依赖
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
-      if (!this.depIds.has(id)) {
-        dep.addSub(this)
+      if (!this.depIds.has(id)) { // 多次求值中避免收集重复依赖的
+        dep.addSub(this) // 添加
       }
     }
   }
@@ -167,13 +180,16 @@ export default class Watcher {
    * Subscriber interface.
    * Will be called when a dependency changes.
    */
+  // 依赖发生改变的时候执行回调
   update () {
     /* istanbul ignore else */
-    if (this.lazy) {
-      this.dirty = true
-    } else if (this.sync) {
-      this.run()
+    if (this.lazy) { // 是不是计算属性的观察者
+      this.dirty = true // 代表着还没有求值
+      // 后面 evaluate方法 对计算属性求值时，才会将 this.dirty 设置为 false，代表着已经求过值了。
+    } else if (this.sync) { // 当变化发生时是否同步更新变化
+      this.run() // 同步则执行run直接渲染视图
     } else {
+      // 异步则 将当前观察者对象放到一个异步更新队列, 依旧是调用 run()
       queueWatcher(this)
     }
   }
@@ -185,6 +201,19 @@ export default class Watcher {
   run () {
     if (this.active) {
       const value = this.get()
+
+      // 即便值相同，拥有Deep属性的观察者以及在对象／数组上的观察者应该被触发更新，因为它们的值可能发生改变。
+      /* const data = {
+        obj: {
+          a: 1
+        }
+      }
+      const obj1 = data.obj
+      data.obj.a = 2
+      const obj2 = data.obj
+      console.log(obj1 === obj2) // true
+      obj1，obj2 具有相同的引用，所以他们总是相等的，但数据改变了
+      */
       if (
         value !== this.value ||
         // Deep watchers and watchers on Object/Arrays should fire even
@@ -195,8 +224,9 @@ export default class Watcher {
       ) {
         // set new value
         const oldValue = this.value
-        this.value = value
-        if (this.user) {
+        this.value = value // 设置新的值
+        // 触发回调
+        if (this.user) { // 这个观察者是用户定义的
           try {
             this.cb.call(this.vm, value, oldValue)
           } catch (e) {
@@ -231,12 +261,13 @@ export default class Watcher {
   /**
    * Remove self from all dependencies' subscriber list.
    */
+  // 解除当前观察者对属性的观察
   teardown () {
-    if (this.active) {
+    if (this.active) { // 判断是否已经解除绑定
       // remove self from vm's watcher list
       // this is a somewhat expensive operation so we skip it
       // if the vm is being destroyed.
-      if (!this.vm._isBeingDestroyed) {
+      if (!this.vm._isBeingDestroyed) { // 该组件实例是否已经被销毁
         remove(this.vm._watchers, this)
       }
       let i = this.deps.length

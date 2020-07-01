@@ -11,6 +11,14 @@ import { updateListeners } from '../vdom/helpers/index'
 
 export function initEvents (vm: Component) {
   vm._events = Object.create(null)
+
+  // _hasHookEvent作用是判断是否存在生命周期钩子的事件侦听器
+  // 当组件检测到存在对子组件生命周期钩子的事件侦听器时，会将 vm._hasHookEvent 设置为 true
+  // 作用在 lifecycle,js 里callHook函数
+  /*   <child
+    @hook:created="handleChildCreated"
+    @hook:mounted="handleChildMounted"
+  /> */
   vm._hasHookEvent = false
   // init parent attached events
   const listeners = vm.$options._parentListeners
@@ -53,6 +61,7 @@ export function updateComponentListeners (
 // 原型挂载$on,$emit,$once,$off方法
 export function eventsMixin (Vue: Class<Component>) {
   const hookRE = /^hook:/
+  // 绑定事件
   Vue.prototype.$on = function (event: string | Array<string>, fn: Function): Component {
     const vm: Component = this
     if (Array.isArray(event)) {
@@ -63,6 +72,8 @@ export function eventsMixin (Vue: Class<Component>) {
       (vm._events[event] || (vm._events[event] = [])).push(fn)
       // optimize hook:event cost by using a boolean flag marked at registration
       // instead of a hash lookup
+
+     // 当组件检测到存在生命周期钩子的事件侦听器时，会将 vm._hasHookEvent 设置为 true
       if (hookRE.test(event)) {
         vm._hasHookEvent = true
       }
@@ -70,6 +81,7 @@ export function eventsMixin (Vue: Class<Component>) {
     return vm
   }
 
+  // 绑定事件只触发一次，触发后立即销毁
   Vue.prototype.$once = function (event: string, fn: Function): Component {
     const vm: Component = this
     function on () {
@@ -81,14 +93,18 @@ export function eventsMixin (Vue: Class<Component>) {
     return vm
   }
 
+  // 解除事件的绑定
   Vue.prototype.$off = function (event?: string | Array<string>, fn?: Function): Component {
     const vm: Component = this
     // all
+    // 如果没有传入参数，
+    // 解除所有绑定事件
     if (!arguments.length) {
       vm._events = Object.create(null)
       return vm
     }
     // array of events
+    // 解除指定的绑定事件
     if (Array.isArray(event)) {
       for (let i = 0, l = event.length; i < l; i++) {
         vm.$off(event[i], fn)

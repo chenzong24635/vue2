@@ -14,7 +14,7 @@ import {
 
 export const MAX_UPDATE_COUNT = 100
 
-const queue: Array<Watcher> = []
+const queue: Array<Watcher> = [] // 存储观察者
 const activatedChildren: Array<Component> = []
 let has: { [key: number]: ?true } = {}
 let circular: { [key: number]: number } = {}
@@ -92,7 +92,7 @@ function flushSchedulerQueue () {
     }
     id = watcher.id
     has[id] = null
-    watcher.run()
+    watcher.run() // 调用Watcher 实例方法run()
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
       circular[id] = (circular[id] || 0) + 1
@@ -163,15 +163,22 @@ function callActivatedHooks (queue) {
  * Jobs with duplicate IDs will be skipped unless it's
  * pushed when the queue is being flushed.
  */
+// 将观察者推送到观察者队列中。
+// 除非具有重复ID的将被跳过，
+// 在刷新队列时推送
 export function queueWatcher (watcher: Watcher) {
-  const id = watcher.id
-  if (has[id] == null) {
+  const id = watcher.id // 观察者对象的唯一标识
+  if (has[id] == null) { // 防止重复推送
     has[id] = true
+     // 在push到 queue 之前有一个对变量 flushing 的判断
+     // 更新开始时会将 flushing 变量的值设置为 true，代表着此时正在执行更新
     if (!flushing) {
+      // 如果队列还未执行更新，直接push到队列中即可
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
+      //如果队列正在执行更新，则根据其ID拼接观察者到队列,保证观察者的执行顺序
       let i = queue.length - 1
       while (i > index && queue[i].id > watcher.id) {
         i--
@@ -179,6 +186,7 @@ export function queueWatcher (watcher: Watcher) {
       queue.splice(i + 1, 0, watcher)
     }
     // queue the flush
+    // 无论调用多少次 queueWatcher 函数，该 if 语句块的代码只会执行一次
     if (!waiting) {
       waiting = true
 

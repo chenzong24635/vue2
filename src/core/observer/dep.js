@@ -10,6 +10,7 @@ let uid = 0
  * A dep is an observable that can have multiple
  * directives subscribing to it.
  */
+
 export default class Dep {
   static target: ?Watcher;
   id: number;
@@ -20,7 +21,7 @@ export default class Dep {
     this.subs = []
   }
 
-  addSub (sub: Watcher) {
+  addSub (sub: Watcher) { // 添加观察目标
     this.subs.push(sub)
   }
 
@@ -29,12 +30,14 @@ export default class Dep {
   }
 
   depend () {
-    if (Dep.target) {
-      Dep.target.addDep(this)
+    // 通过调用 watcher的addDep方法， 执行依赖收集
+    if (Dep.target) { // Dep.target是个 Watcher 实例
+      Dep.target.addDep(this) // 调用 watcher的addDep方法，并传递Dep实例，来调用 addSub
     }
   }
 
   notify () {
+    // 触发依赖
     // stabilize the subscriber list first
     const subs = this.subs.slice()
     if (process.env.NODE_ENV !== 'production' && !config.async) {
@@ -44,7 +47,7 @@ export default class Dep {
       subs.sort((a, b) => a.id - b.id)
     }
     for (let i = 0, l = subs.length; i < l; i++) {
-      subs[i].update()
+      subs[i].update() //调用 Watcher 实例方法
     }
   }
 }
@@ -59,6 +62,7 @@ const targetStack = []
 
 export function pushTarget (target: ?Watcher) {
   targetStack.push(target)
+  // Dep.target 保存着一个观察者对象，这个观察者对象就是即将要收集的目标。
   Dep.target = target
 }
 

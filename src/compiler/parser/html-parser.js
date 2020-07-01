@@ -14,16 +14,42 @@ import { isNonPhrasingTag } from 'web/compiler/util'
 import { unicodeRegExp } from 'core/util/lang'
 
 // Regular Expressions for parsing tags and attributes
+// 匹配标签的属性
 const attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/
+// 这个表达式有五个捕获组
+// * 匹配属性名
+// * 匹配属性值（以双引号形式引入）； class="classname" 匹配到 classname
+// * 匹配属性值（以单引号形式引入）； class='classname' 匹配到 classname
+// * 匹配属性值（不使用引号引入）； class=classname 匹配到 classname
+// * 匹配属性值（单独的属性名）； disabled 匹配到 disabled
+
 const dynamicArgAttribute = /^\s*((?:v-[\w-]+:|@|:|#)\[[^=]+\][^\s"'<>\/=]*)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/
+
+
+// ncname 不包含冒号的 XML 名称（An XML name that does not contain a colon ）
+// qname <前缀:标签名称>，也就是合法的XML标签
+// 匹配标签名
 const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z${unicodeRegExp.source}]*`
 const qnameCapture = `((?:${ncname}\\:)?${ncname})`
+
+// 匹配开始标签的 < 以及后面的 标签名称
 const startTagOpen = new RegExp(`^<${qnameCapture}`)
+
+// 匹配结束标签的 > 或 />  (因为该标签可能自闭和 如:<br />)
 const startTagClose = /^\s*(\/?)>/
+
+
+// 匹配结束标签 </ 标签名称 >
 const endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`)
+
+// 匹配文档的 DOCTYPE 标签
 const doctype = /^<!DOCTYPE [^>]+>/i
 // #7298: escape - to avoid being passed as HTML comment when inlined in page
+
+// 匹配注释节点
 const comment = /^<!\--/
+
+// 匹配条件注释节点
 const conditionalComment = /^<!\[/
 
 // Special Elements (can contain anything)
@@ -51,20 +77,32 @@ function decodeAttr (value, shouldDecodeNewlines) {
   return value.replace(re, match => decodingMap[match])
 }
 
+// 解析HTML
 export function parseHTML (html, options) {
+  // while 循环中处理 html时，每当匹配到开始标签时， push进去
+  // 匹配到相应的结束标签时，pop出来
+  // <div><p></p></div> ; stack= [div,p]
+  // 最先遇到的结束标签，其对应的开始标签应该最后被压入 stack 栈
+
   const stack = []
   const expectHTML = options.expectHTML
   const isUnaryTag = options.isUnaryTag || no
   const canBeLeftOpenTag = options.canBeLeftOpenTag || no
   let index = 0
   let last, lastTag
+
+  // html 为空，即 html 被 parse 完毕时结束循环
   while (html) {
+    // 每次循环开始时将 html 的值赋给变量 last
     last = html
     // Make sure we're not in a plaintext content element like script/style
+    // 即将 parse 的内容不是在纯文本标签里 (如script,style)
     if (!lastTag || !isPlainTextElement(lastTag)) {
       let textEnd = html.indexOf('<')
+      // html 字符串的第一个字符就是左尖括号时
       if (textEnd === 0) {
         // Comment:
+        // 注释节点 <!-- -->
         if (comment.test(html)) {
           const commentEnd = html.indexOf('-->')
 
@@ -78,6 +116,7 @@ export function parseHTML (html, options) {
         }
 
         // http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
+        // 条件注释节点 <![ ]>
         if (conditionalComment.test(html)) {
           const conditionalEnd = html.indexOf(']>')
 
@@ -88,6 +127,7 @@ export function parseHTML (html, options) {
         }
 
         // Doctype:
+        // doctype 节点 <!DOCTYPE >
         const doctypeMatch = html.match(doctype)
         if (doctypeMatch) {
           advance(doctypeMatch[0].length)
@@ -95,6 +135,7 @@ export function parseHTML (html, options) {
         }
 
         // End tag:
+        // 结束标签 </ xxx>
         const endTagMatch = html.match(endTag)
         if (endTagMatch) {
           const curIndex = index
@@ -104,6 +145,7 @@ export function parseHTML (html, options) {
         }
 
         // Start tag:
+        // 开始标签 <xxx>
         const startTagMatch = parseStartTag()
         if (startTagMatch) {
           handleStartTag(startTagMatch)
@@ -115,6 +157,8 @@ export function parseHTML (html, options) {
       }
 
       let text, rest, next
+      // 第一个字符是 < 但没有成功匹配标签，或第一个字符不是 < 的字符串
+      // 如： <xxx 或 xxx
       if (textEnd >= 0) {
         rest = html.slice(textEnd)
         while (
@@ -144,6 +188,7 @@ export function parseHTML (html, options) {
         options.chars(text, index - text.length, index)
       }
     } else {
+      // 即将 parse 的内容是在纯文本标签里
       let endTagLength = 0
       const stackedTag = lastTag.toLowerCase()
       const reStackedTag = reCache[stackedTag] || (reCache[stackedTag] = new RegExp('([\\s\\S]*?)(</' + stackedTag + '[^>]*>)', 'i'))
@@ -167,6 +212,8 @@ export function parseHTML (html, options) {
       parseEndTag(stackedTag, index - endTagLength, index)
     }
 
+    // 如果两者相等，则说明字符串 html 在经历循环体的代码之后没有任何改变，
+    // 此时会把 html 字符串作为纯文本对待
     if (html === last) {
       options.chars && options.chars(html)
       if (process.env.NODE_ENV !== 'production' && !stack.length && options.warn) {
@@ -179,27 +226,47 @@ export function parseHTML (html, options) {
   // Clean up any remaining tags
   parseEndTag()
 
+  // 删除字符
   function advance (n) {
     index += n
     html = html.substring(n)
   }
 
+  // parse 开始标签
   function parseStartTag () {
+    // html = '<div style="color: red;">hello <p>world</p></div>'
+    // html.match(startTagOpen)
+    /* 匹配返回
+    [
+      0: "<div"
+      1: "div"
+      index: 0
+      ...
+    ]
+    */
+
     const start = html.match(startTagOpen)
     if (start) {
       const match = {
-        tagName: start[1],
-        attrs: [],
-        start: index
+        tagName: start[1], // 标签名
+        attrs: [], // 存储属性
+        start: index // 当前字符在html字符串里的位置
       }
+      // 删除 html 部分字符（匹配到的字符串的长度）
+      // 匹配后 html = ' style="color: red;">hello <p>world</p></div>'
       advance(start[0].length)
       let end, attr
+
+      // 匹配获取此开始标签的属性
+      //        没有匹配到开始标签的结束部分（>），         并且匹配到了开始标签中的属性
       while (!(end = html.match(startTagClose)) && (attr = html.match(dynamicArgAttribute) || html.match(attribute))) {
         attr.start = index
         advance(attr[0].length)
         attr.end = index
-        match.attrs.push(attr)
+        match.attrs.push(attr) // 添加属性
       }
+
+      // 如果是个自闭合标签
       if (end) {
         match.unarySlash = end[1]
         advance(end[0].length)
@@ -208,7 +275,7 @@ export function parseHTML (html, options) {
       }
     }
   }
-
+  // 处理 parseStartTag 返回的结果
   function handleStartTag (match) {
     const tagName = match.tagName
     const unarySlash = match.unarySlash
@@ -252,6 +319,10 @@ export function parseHTML (html, options) {
     }
   }
 
+  // parse 结束标签
+  // 检测是否缺少闭合标签
+  // 处理 stack 栈中剩余的标签
+  // 解析 </br> 与 </p> 标签，与浏览器的行为相同
   function parseEndTag (tagName, start, end) {
     let pos, lowerCasedTagName
     if (start == null) start = index

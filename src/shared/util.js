@@ -149,9 +149,12 @@ export function hasOwn (obj: Object | Array<*>, key: string): boolean {
 
 /**
  * Create a cached version of a pure function.
+ * 创建纯函数的缓存
  */
+// 在Vue中，需要转译很多相同的字符串，若每次都重新执行转译，会造成很多不必要的开销。
+// cache这个函数可以读取缓存，如果缓存中没有就存放到缓存中，最后再读。
 export function cached<F: Function> (fn: F): F {
-  const cache = Object.create(null)
+  const cache = Object.create(null) // 创建纯函数是为了防止变化（纯函数的特性：输入不变则输出不变）。
   return (function cachedFn (str: string) {
     const hit = cache[str]
     return hit || (cache[str] = fn(str))
@@ -160,6 +163,11 @@ export function cached<F: Function> (fn: F): F {
 
 /**
  * Camelize a hyphen-delimited string.
+ * 连字符转驼峰
+ */
+/**
+ * @params{String } _ 代表匹配到的字符
+ * @params{String } _ c 代表分组的第一个内容(camelizeRE里第一个括号匹配的内容)
  */
 const camelizeRE = /-(\w)/g
 export const camelize = cached((str: string): string => {
@@ -169,12 +177,14 @@ export const camelize = cached((str: string): string => {
 /**
  * Capitalize a string.
  */
+
 export const capitalize = cached((str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1)
 })
 
 /**
  * Hyphenate a camelCase string.
+ * 驼峰转连字符
  */
 const hyphenateRE = /\B([A-Z])/g
 export const hyphenate = cached((str: string): string => {
