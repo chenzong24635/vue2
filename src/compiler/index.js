@@ -23,3 +23,4 @@ export const createCompiler = createCompilerCreator(function baseCompile (
     staticRenderFns: code.staticRenderFns
   }
 })
+// 
