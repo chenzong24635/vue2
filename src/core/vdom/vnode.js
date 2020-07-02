@@ -1,14 +1,14 @@
 /* @flow */
 
 export default class VNode {
-  tag: string | void;
-  data: VNodeData | void;
-  children: ?Array<VNode>;
-  text: string | void;
-  elm: Node | void;
+  tag: string | void; // 标签名
+  data: VNodeData | void; // 标签属性 class，attribute，style以及绑定的事件
+  children: ?Array<VNode>; // 子节点
+  text: string | void; // 文本内容
+  elm: Node | void; // 对应的真实dom节点
   ns: string | void;
   context: Component | void; // rendered in this component's scope
-  key: string | number | void;
+  key: string | number | void; // 标记，在diff过程中可以提高diff的效率
   componentOptions: VNodeComponentOptions | void;
   componentInstance: Component | void; // component instance
   parent: VNode | void; // component placeholder node

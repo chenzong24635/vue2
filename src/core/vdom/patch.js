@@ -67,6 +67,7 @@ function createKeyToOldIdx (children, beginIdx, endIdx) {
   return map
 }
 
+// 定义了一系列的辅助方法，最终返回了一个 patch 方法，这个方法就赋值给了 vm._update 函数里调用的 vm.__patch__
 export function createPatchFunction (backend) {
   let i, j
   const cbs = {}
@@ -426,13 +427,13 @@ export function createPatchFunction (backend) {
     // 在新旧两组VNode节点的左右头尾两侧都有一个变量标记，在遍历过程中这几个变量都会向中间靠拢。
     // 当oldStartIdx > oldEndIdx或者newStartIdx > newEndIdx时结束循环。
     while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
-      
+
       if (isUndef(oldStartVnode)) {
         oldStartVnode = oldCh[++oldStartIdx] // Vnode has been moved left
       } else if (isUndef(oldEndVnode)) {
         oldEndVnode = oldCh[--oldEndIdx]
-        
-      } 
+
+      }
       // 分别比较oldCh以及newCh的两头节点4种情况，为同一个VNode，则直接patchVnode
       else if (sameVnode(oldStartVnode, newStartVnode)) {
         //新旧children 的开头，相同
@@ -743,8 +744,12 @@ export function createPatchFunction (backend) {
     }
   }
 
+  /**
+   *@param {Boolean | Null} hydrating 表示是否是服务端渲染；
+   *@param {Boolean} removeOnly  是给 transition-group 用的
+  */
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
-    // 如果新vnode不存在，旧vnode存在则删除
+    // 如果新vnode不存在，旧vnode存在，则删除
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
       return

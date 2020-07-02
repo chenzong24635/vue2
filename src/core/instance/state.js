@@ -59,8 +59,10 @@ export function initState (vm: Component) {
   } else {
     observe(vm._data = {}, true /* asRootData */)
   }
+  // 初始化 computed  选项
   if (opts.computed) initComputed(vm, opts.computed)
 
+  // 初始化 watch  选项
   // 判断 opts.watch 是否存在 且 是不是原生的 watch 对象（Firefox 中原生提供了 Object.prototype.watch 函数）
   if (opts.watch && opts.watch !== nativeWatch) {
     initWatch(vm, opts.watch)
@@ -153,6 +155,7 @@ function initData (vm: Component) {
         vm
       )
     } else if (!isReserved(key)) {
+      // 过proxy代理,可以直接通过 this.属性 访问data中的值,
       proxy(vm, `_data`, key)
     }
   }

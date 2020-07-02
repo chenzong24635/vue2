@@ -19,6 +19,9 @@ import { isFalse, isTrue, isDef, isUndef, isPrimitive } from 'shared/util'
 export function simpleNormalizeChildren (children: any) {
   for (let i = 0; i < children.length; i++) {
     if (Array.isArray(children[i])) {
+      // 理论上编译生成的 children 都已经是 VNode 类型的，
+      // 但这里有一个例外，就是 functional component 函数式组件返回的是一个数组而不是一个根节点，
+      // 所以会通过 Array.prototype.concat 方法把整个 children 数组打平，让它的深度只有一层。
       return Array.prototype.concat.apply([], children)
     }
   }
@@ -31,6 +34,9 @@ export function simpleNormalizeChildren (children: any) {
 // is needed to cater to all possible types of children values.
 // 用户手写 render 处理
 export function normalizeChildren (children: any): ?Array<VNode> {
+  // normalizeChildren 方法的调用场景有 2 种
+  // 1.当 children 只有一个节点的时候，调用 createTextVNode 创建一个文本节点的 VNode；
+  // 2.当编译 slot、v-for 的时候会产生嵌套数组的情况，会调用 normalizeArrayChildren 方法
   return isPrimitive(children)
     ? [createTextVNode(children)]
     : Array.isArray(children)

@@ -210,6 +210,7 @@ export function parse (
     shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
+    // 在解析 html 字符串时每次遇到 开始标签 时就会调用该函数
     start (tag, attrs, unary, start, end) {
       // check namespace.
       // inherit parent ns if there is one
@@ -296,7 +297,7 @@ export function parse (
         closeElement(element)
       }
     },
-
+    // 在解析 html 字符串时每次遇到 结束标签 时就会调用该函数
     end (tag, start, end) {
       const element = stack[stack.length - 1]
       // pop stack
@@ -307,7 +308,7 @@ export function parse (
       }
       closeElement(element)
     },
-
+    // 在解析 html 字符串时每次遇到 纯文本 时就会调用该函数
     chars (text: string, start: number, end: number) {
       if (!currentParent) {
         if (process.env.NODE_ENV !== 'production') {
@@ -379,6 +380,7 @@ export function parse (
         }
       }
     },
+    // 在解析 html 字符串时每次遇到 注释节点 时就会调用该函数
     comment (text: string, start, end) {
       // adding anyting as a sibling to the root node is forbidden
       // comments should still be allowed, but ignored

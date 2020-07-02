@@ -232,7 +232,7 @@ export function parseHTML (html, options) {
     html = html.substring(n)
   }
 
-  // parse 开始标签
+  // 解析开始标签
   function parseStartTag () {
     // html = '<div style="color: red;">hello <p>world</p></div>'
     // html.match(startTagOpen)
@@ -289,6 +289,7 @@ export function parseHTML (html, options) {
       }
     }
 
+    // 是否自闭合标签
     const unary = isUnaryTag(tagName) || !!unarySlash
 
     const l = match.attrs.length
@@ -309,6 +310,7 @@ export function parseHTML (html, options) {
       }
     }
 
+    // 不是自闭合标签
     if (!unary) {
       stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs, start: match.start, end: match.end })
       lastTag = tagName
@@ -319,7 +321,7 @@ export function parseHTML (html, options) {
     }
   }
 
-  // parse 结束标签
+  // 解析结束标签
   // 检测是否缺少闭合标签
   // 处理 stack 栈中剩余的标签
   // 解析 </br> 与 </p> 标签，与浏览器的行为相同
@@ -341,6 +343,7 @@ export function parseHTML (html, options) {
       pos = 0
     }
 
+    // 判断是否有元素缺少闭合标签
     if (pos >= 0) {
       // Close all the open elements, up the stack
       for (let i = stack.length - 1; i >= pos; i--) {

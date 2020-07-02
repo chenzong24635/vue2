@@ -18,6 +18,8 @@ import {
   defineReactive
 } from '../util/index'
 
+
+// 全局方法的定义
 export function initGlobalAPI (Vue: GlobalAPI) {
   // config
   const configDef = {}

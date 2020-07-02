@@ -60,6 +60,8 @@ export function initLifecycle (vm: Component) {
 
 //原型挂载 _update，$forceUpdate,$destroy 方法
 export function lifecycleMixin (Vue: Class<Component>) {
+  // _update 把 VNode 渲染成真正的 DOM,更新视图
+  // _update 被调用的时机有 2 个，一个是首次渲染，一个是数据更新的时候
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
@@ -70,6 +72,10 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // based on the rendering backend used.
     if (!prevVnode) {
       // initial render
+      // __patch__ （虚拟DOM核心方法），对比新旧 Vnode，最后生成新的真实dom节点并完成视图的更新工作。
+      // 这个方法实际上在不同的平台不一样
+      // 在 web 平台中定义在 src/platforms/web/runtime/index.js
+      // 最终指向 src/core/vdom/patch.js 的 createPatchFunction方法
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
       // updates
@@ -195,7 +201,7 @@ export function mountComponent (
       const endTag = `vue-perf-end:${id}`
 
       mark(startTag)
-      const vnode = vm._render()
+      const vnode = vm._render() // 生成虚拟节点 (在src/core/instance/render.js中定义)
       mark(endTag)
       measure(`vue ${name} render`, startTag, endTag)
 
@@ -206,7 +212,7 @@ export function mountComponent (
     }
   } else {
     updateComponent = () => {
-      vm._update(vm._render(), hydrating)
+      vm._update(vm._render(), hydrating) // 渲染成真正的 DOM（在当前文件的 lifecycleMixin 函数中定义）
     }
   }
 

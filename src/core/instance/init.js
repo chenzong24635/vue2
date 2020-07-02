@@ -57,14 +57,16 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    // 初始化生命周期,主要就是给vm对象添加了 $parent、$root、$children,$ref等属性
+    // 初始化生命周期,
+    // 主要就是给vm对象添加了 $parent、$root、$children,$ref等属性
     initLifecycle(vm)
 
-    // 初始化事件相关的属性
+    // 初始化事件中心
     // 在 vm 实例对象上添加属性 _events 和 _hasHookEvent属性
     initEvents(vm)
 
-    // 初始化渲染，vm实例添加vnode 和 _staticTrees, $attrs , $listeners等实例属性，定义_c,$createElements实例方法
+    // 初始化渲染，
+    // vm实例添加vnode 和 _staticTrees, $attrs , $listeners等实例属性，定义_c,$createElements实例方法
     initRender(vm)
 
     // 调用 beforeCreate 钩子
@@ -72,9 +74,10 @@ export function initMixin (Vue: Class<Component>) {
 
     //注入数据并做响应化（在data，prop属性初始化之前
     initInjections(vm) // resolve injections before data/props
-    //初始化props,methods,data,computed,watch等
 
+    //初始化props,methods,data,computed,watch等
     initState(vm)
+
     //处理注入数据（在data，prop属性初始化之后
     initProvide(vm) // resolve provide after data/props
 

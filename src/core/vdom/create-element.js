@@ -25,13 +25,15 @@ const ALWAYS_NORMALIZE = 2 // 用户手写 render 方法使用
 
 // wrapper function for providing a more flexible interface
 // without getting yelled at by flow
+// 对_createElement二次封装，
+// 主要将 children由 any 类型 规范成 VNode 类型。
 export function createElement (
-  context: Component, // context 表示 VNode 的上下文环境
-  tag: any, // 表示标签，它可以是一个字符串，也可以是一个 Component
-  data: any, // 表示 VNode 的数据，它是一个 VNodeData 类型，可以在 flow/vnode.js 中找到它的定义
-  children: any, // 表示当前 VNode 的子节点，它是任意类型的，它接下来需要被规范为标准的 VNode 数组
+  context: Component,
+  tag: any,
+  data: any,
+  children: any,
   normalizationType: any,
-  alwaysNormalize: boolean  // 表示子节点规范的类型，类型不同规范的方法也就不一样，它主要是参考 render 函数是编译生成的还是用户手写的。
+  alwaysNormalize: boolean
 ): VNode | Array<VNode> {
   if (Array.isArray(data) || isPrimitive(data)) {
     normalizationType = children
@@ -45,11 +47,11 @@ export function createElement (
 }
 
 export function _createElement (
-  context: Component,
-  tag?: string | Class<Component> | Function | Object,
-  data?: VNodeData,
-  children?: any,
-  normalizationType?: number
+  context: Component,  // context 表示 VNode 的上下文环境
+  tag?: string | Class<Component> | Function | Object,  // 表示标签，它可以是一个字符串，也可以是一个 Component
+  data?: VNodeData, // 表示 VNode 的数据，它是一个 VNodeData 类型，可以在 flow/vnode.js 中找到它的定义
+  children?: any, // 表示当前 VNode 的子节点，它是任意类型的，它接下来需要被规范为标准的 VNode 数组
+  normalizationType?: number// 表示子节点规范的类型，类型不同规范的方法也就不一样，它主要是参考 render 函数是编译生成的还是用户手写的。
 ): VNode | Array<VNode> {
   if (isDef(data) && isDef((data: any).__ob__)) {
     process.env.NODE_ENV !== 'production' && warn(
@@ -93,6 +95,7 @@ export function _createElement (
     children = simpleNormalizeChildren(children)
   }
   let vnode, ns
+  // 如果是 string 类型，则接着判断如果是内置的一些节点，则直接创建一个普通 VNode，
   if (typeof tag === 'string') {
     let Ctor
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
@@ -104,14 +107,17 @@ export function _createElement (
           context
         )
       }
+      // 创建一个 VNode 的实例
       vnode = new VNode(
         config.parsePlatformTagName(tag), data, children,
         undefined, undefined, context
       )
     } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
       // component
+      // 如果是为已注册的组件名，则通过 createComponent 创建一个组件类型的 VNode 节点
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {
+      // 否则创建一个未知的标签的 VNode。
       // unknown or unlisted namespaced elements
       // check at runtime because it may get assigned a namespace when its
       // parent normalizes children
@@ -122,6 +128,7 @@ export function _createElement (
     }
   } else {
     // direct component options / constructor
+    // 如果是 tag 一个 Component 类型，则直接调用 createComponent 创建一个组件类型的 VNode 节点
     vnode = createComponent(tag, data, context, children)
   }
   if (Array.isArray(vnode)) {
