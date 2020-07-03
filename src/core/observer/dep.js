@@ -18,26 +18,29 @@ export default class Dep {
 
   constructor () {
     this.id = uid++
+    // 存放观察目标watcher的数组
     this.subs = []
   }
 
-  addSub (sub: Watcher) { // 添加观察目标
+  // 添加 watcher
+  addSub (sub: Watcher) {
     this.subs.push(sub)
   }
 
+  // 移除 watcher
   removeSub (sub: Watcher) {
     remove(this.subs, sub)
   }
 
+  // 通过调用 watcher 的addDep方法， 执行依赖收集
   depend () {
-    // 通过调用 watcher的addDep方法， 执行依赖收集
-    if (Dep.target) { // Dep.target是个 Watcher 实例
+    if (Dep.target) { // Dep.target存放该 watcher
       Dep.target.addDep(this) // 调用 watcher的addDep方法，并传递Dep实例，来调用 addSub
     }
   }
 
+  // 通知 watcher 触发依赖
   notify () {
-    // 触发依赖
     // stabilize the subscriber list first
     const subs = this.subs.slice()
     if (process.env.NODE_ENV !== 'production' && !config.async) {
@@ -47,7 +50,7 @@ export default class Dep {
       subs.sort((a, b) => a.id - b.id)
     }
     for (let i = 0, l = subs.length; i < l; i++) {
-      subs[i].update() //调用 Watcher 实例方法
+      subs[i].update() //调用 watcher update方法
     }
   }
 }

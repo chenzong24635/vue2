@@ -13,21 +13,21 @@ import { resolveScopedSlots } from './resolve-scoped-slots'
 import { bindDynamicKeys, prependModifier } from './bind-dynamic-keys'
 
 export function installRenderHelpers (target: any) {
-  target._o = markOnce
-  target._n = toNumber
-  target._s = toString
-  target._l = renderList
-  target._t = renderSlot
-  target._q = looseEqual
-  target._i = looseIndexOf
-  target._m = renderStatic
-  target._f = resolveFilter
-  target._k = checkKeyCodes
-  target._b = bindObjectProps
-  target._v = createTextVNode
-  target._e = createEmptyVNode
-  target._u = resolveScopedSlots
-  target._g = bindObjectListeners
+  target._o = markOnce // v-once render 处理
+  target._n = toNumber // 值转换 Number 处理
+  target._s = toString // 值转换 String 处理
+  target._l = renderList // v-for render 处理
+  target._t = renderSlot // slot 槽点 render 处理
+  target._q = looseEqual // 判断两个对象是否大体相等
+  target._i = looseIndexOf // 对等属性索引，不存在则返回 -1
+  target._m = renderStatic // 静态节点 render 处理
+  target._f = resolveFilter // filters 指令 render 处理
+  target._k = checkKeyCodes // 检查config中的keyCode
+  target._b = bindObjectProps // v-bind render 处理，将 v-bind="object" 的属性 merge 到VNode属性中
+  target._v = createTextVNode // 创建文本节点
+  target._e = createEmptyVNode // 创建空节点
+  target._u = resolveScopedSlots // scopeSlots render 处理
+  target._g = bindObjectListeners// v-on render 处理
   target._d = bindDynamicKeys
   target._p = prependModifier
 }

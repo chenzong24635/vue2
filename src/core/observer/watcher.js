@@ -63,7 +63,7 @@ export default class Watcher {
     // options
     if (options) {
       this.deep = !!options.deep
-      this.user = !!options.user // 用户创建的 watch 实例
+      this.user = !!options.user // 用户创建的 Watcher 实例
       this.lazy = !!options.lazy
       this.sync = !!options.sync
       this.before = options.before
@@ -143,6 +143,7 @@ export default class Watcher {
   /**
    * Add a dependency to this directive.
    */
+  // Dep 添加 watcher
   addDep (dep: Dep) {
     const id = dep.id
     // 防止重复收集依赖
@@ -150,7 +151,7 @@ export default class Watcher {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) { // 多次求值中避免收集重复依赖的
-        dep.addSub(this) // 添加
+        dep.addSub(this) // 添加 watcher
       }
     }
   }
