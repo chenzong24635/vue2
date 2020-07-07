@@ -35,6 +35,8 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
+// 将_data（或者_props等）上面的数据代理到vm上
+// proxy(vm, `_data`, key)
 export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
@@ -42,9 +44,12 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.set = function proxySetter (val) {
     this[sourceKey][key] = val
   }
+  // 替换数据的get，set方法，
+  // 如:访问 this.age ，实际访问 this._data.age
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+//初始化props,methods,data,computed,watch
 export function initState (vm: Component) {
   // 存储所有该组件实例的 watcher 对象
   vm._watchers = []
@@ -119,9 +124,12 @@ function initProps (vm: Component, propsOptions: Object) {
 
 function initData (vm: Component) {
   let data = vm.$options.data
+  // 函数时转换为对象
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
+
+  // 如果不是纯对象 ，警告
   if (!isPlainObject(data)) {
     data = {}
     process.env.NODE_ENV !== 'production' && warn(
@@ -136,7 +144,7 @@ function initData (vm: Component) {
   const methods = vm.$options.methods
   let i = keys.length
 
-  // 属性定义优先级
+  // 属性定义优先级，重复时警告
   // props > methods > data
   while (i--) {
     const key = keys[i]
@@ -154,12 +162,13 @@ function initData (vm: Component) {
         `Use prop default value instead.`,
         vm
       )
-    } else if (!isReserved(key)) {
-      // 过proxy代理,可以直接通过 this.属性 访问data中的值,
+    } else if (!isReserved(key)) { // 判断是否是保留字段
+      // 过proxy代理,可以直接通过 this.属性 访问data中的值,而不是 this._data
       proxy(vm, `_data`, key)
     }
   }
   // observe data
+  // 对数据进行绑定, 根数据
   observe(data, true /* asRootData */)
 }
 

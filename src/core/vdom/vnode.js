@@ -1,5 +1,9 @@
 /* @flow */
 
+// VNode 是对真实 DOM 的一种抽象描述，
+// 用来映射到真实 DOM 的渲染
+//  VNode 通过 create、diff、patch 等过程 映射到真实的 DOM
+
 export default class VNode {
   tag: string | void; // 节点的标签名
   data: VNodeData | void; // 标签属性 class，attribute，style，props，key绑定的事件等

@@ -37,6 +37,8 @@ export function normalizeChildren (children: any): ?Array<VNode> {
   // normalizeChildren 方法的调用场景有 2 种
   // 1.当 children 只有一个节点的时候，调用 createTextVNode 创建一个文本节点的 VNode；
   // 2.当编译 slot、v-for 的时候会产生嵌套数组的情况，会调用 normalizeArrayChildren 方法
+
+  // 返回数组包含 VNode
   return isPrimitive(children)
     ? [createTextVNode(children)]
     : Array.isArray(children)

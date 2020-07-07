@@ -75,7 +75,7 @@ export function initMixin (Vue: Class<Component>) {
     //注入数据并做响应化（在data，prop属性初始化之前
     initInjections(vm) // resolve injections before data/props
 
-    //初始化props,methods,data,computed,watch等
+    //初始化props,methods,data,computed,watch
     initState(vm)
 
     //处理注入数据（在data，prop属性初始化之后
