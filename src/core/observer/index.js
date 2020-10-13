@@ -179,7 +179,7 @@ export function defineReactive(
   // 存储 属性所有的依赖
   const dep = new Dep()
 
-  // 获取对象属性对应的属性描述符
+  // 获取对象自有属性对应的属性描述符
   const property = Object.getOwnPropertyDescriptor(obj, key)
   // 如果属性不可配置 则return，不进行监测，
   if (property && property.configurable === false) {
@@ -288,14 +288,14 @@ export function set(target: Array < any > | Object, key: any, val: any): any {
   // 以上都不成立, 即开始给target创建一个全新的属性
   // 获取Observer实例
   const ob = (target: any).__ob__
-  // target 本身就不是响应式数据, 直接赋值
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
       'at runtime - declare it upfront in the data option.'
-    )
-    return val
-  }
+      )
+      return val
+    }
+  // target 本身就不是响应式数据, 直接赋值
   if (!ob) {
     target[key] = val
     return val

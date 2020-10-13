@@ -189,10 +189,12 @@ const computedWatcherOptions = { lazy: true }
 
 function initComputed (vm: Component, computed: Object) {
   // $flow-disable-line
+  // 定义了一个空的对象，用来存放所有计算属性相关的 watcher
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()
 
+  // 依次为每个 computed 属性定义
   for (const key in computed) {
     const userDef = computed[key]
     // 计算属性有两种写法：函数，对象
@@ -209,16 +211,16 @@ function initComputed (vm: Component, computed: Object) {
       // create internal watcher for the computed property.
       watchers[key] = new Watcher(
         vm,
-        getter || noop,
-        noop,
-        computedWatcherOptions
+        getter || noop, // 用户传入的求值函数
+        noop, // 回调函数
+        computedWatcherOptions // 声明 lazy 属性 标记 computed watcher
       )
     }
 
     // component-defined computed properties are already defined on the
     // component prototype. We only need to define computed properties defined
     // at instantiation here.
-    // 检查计算属性是否已定义
+    // 计算属性是否已定义则去定义
     // 重名则报错
     if (!(key in vm)) {
       defineComputed(vm, key, userDef)
@@ -237,13 +239,17 @@ export function defineComputed (
   key: string,
   userDef: Object | Function
 ) {
+  // 非服务端渲染则缓存
   const shouldCache = !isServerRendering()
+  // 用户定义的computed
+  // 是函数形式
   if (typeof userDef === 'function') {
     sharedPropertyDefinition.get = shouldCache
       ? createComputedGetter(key)
       : createGetterInvoker(userDef)
     sharedPropertyDefinition.set = noop
   } else {
+    // 是对象形式
     sharedPropertyDefinition.get = userDef.get
       ? shouldCache && userDef.cache !== false
         ? createComputedGetter(key)
@@ -251,6 +257,7 @@ export function defineComputed (
       : noop
     sharedPropertyDefinition.set = userDef.set || noop
   }
+  // 没有定义set函数时，却对其赋值 会报错
   if (process.env.NODE_ENV !== 'production' &&
       sharedPropertyDefinition.set === noop) {
     sharedPropertyDefinition.set = function () {
@@ -413,6 +420,7 @@ export function stateMixin (Vue: Class<Component>) {
         handleError(error, vm, `callback for immediate watcher "${watcher.expression}"`)
       }
     }
+    // 返回一个函数，执行后解除watch绑定
     return function unwatchFn () {
       watcher.teardown()
     }

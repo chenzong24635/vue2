@@ -596,7 +596,7 @@ export function createPatchFunction (backend) {
         if (process.env.NODE_ENV !== 'production') {
           checkDuplicateKeys(ch)
         }
-        //清空文本内容，
+        // 清空文本内容，
         if (isDef(oldVnode.text)) nodeOps.setTextContent(elm, '')
         // 加入 子节点
         addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue)

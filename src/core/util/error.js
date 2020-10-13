@@ -42,6 +42,8 @@ export function invokeWithErrorHandling (
 ) {
   let res
   try {
+    // 使用了apply和call改变了this指向，而在箭头函数中this指向是无法改变的，
+    // 所以我们在编写生命周期函数的时候不能使用箭头函数。
     res = args ? handler.apply(context, args) : handler.call(context)
     if (res && !res._isVue && isPromise(res) && !res._handled) {
       res.catch(e => handleError(e, vm, info + ` (Promise/async)`))

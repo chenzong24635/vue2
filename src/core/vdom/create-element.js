@@ -25,7 +25,8 @@ const ALWAYS_NORMALIZE = 2 // 用户手写 render 方法使用
 
 // wrapper function for providing a more flexible interface
 // without getting yelled at by flow
-// 对_createElement二次封装，
+
+// 对 _createElement 二次封装，
 // 主要将 children由 any 类型 规范成 VNode 类型。
 export function createElement (
   context: Component,
@@ -46,6 +47,7 @@ export function createElement (
   return _createElement(context, tag, data, children, normalizationType)
 }
 
+// 创建VNode的函数
 export function _createElement (
   context: Component,  // context 表示 VNode 的上下文环境
   tag?: string | Class<Component> | Function | Object,  // 表示标签，它可以是一个字符串，也可以是一个 Component

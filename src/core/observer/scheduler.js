@@ -117,6 +117,7 @@ function flushSchedulerQueue () {
   resetSchedulerState()
 
   // call component updated and activated hooks
+  // 调用active和upate钩子
   callActivatedHooks(activatedQueue)
   callUpdatedHooks(updatedQueue)
 

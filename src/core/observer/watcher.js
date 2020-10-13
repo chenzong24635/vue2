@@ -28,11 +28,11 @@ export default class Watcher {
   expression: string;
   cb: Function;
   id: number;
-  deep: boolean;
-  user: boolean;
-  lazy: boolean;
+  deep: boolean; // 深度监听
+  user: boolean; // 用户创建的 Watcher 实例
+  lazy: boolean; // 惰性计算，只有到真正在模板里去读取它的值后才会计算
   sync: boolean;
-  dirty: boolean;
+  dirty: boolean; // 缓存(为true时，表示这个数据是脏数据，需要重新求值；false读取缓存)
   active: boolean;
   deps: Array<Dep>;
   newDeps: Array<Dep>;
@@ -63,7 +63,7 @@ export default class Watcher {
     // options
     if (options) {
       this.deep = !!options.deep
-      this.user = !!options.user // 用户创建的 Watcher 实例
+      this.user = !!options.user 
       this.lazy = !!options.lazy
       this.sync = !!options.sync
       this.before = options.before
@@ -97,6 +97,7 @@ export default class Watcher {
         )
       }
     }
+    // 惰性求值
     this.value = this.lazy
       ? undefined
       : this.get()
@@ -130,6 +131,7 @@ export default class Watcher {
     } finally {
       // "touch" every property so they are all tracked as
       // dependencies for deep watching
+      // 深度监听
       if (this.deep) {
         traverse(value)
       }
@@ -244,6 +246,8 @@ export default class Watcher {
    * Evaluate the value of the watcher.
    * This only gets called for lazy watchers.
    */
+  // 在src\core\instance\state.js
+  // createComputedGetter里触发
   evaluate () {
     this.value = this.get()
     this.dirty = false

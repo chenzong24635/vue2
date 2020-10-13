@@ -115,6 +115,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     callHook(vm, 'beforeDestroy') // 调用 beforeDestroy 钩子
     vm._isBeingDestroyed = true
     // remove self from parent
+    // 一些销毁工作
     const parent = vm.$parent
     if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
       remove(parent.$children, vm)
@@ -231,6 +232,7 @@ export function mountComponent (
 
   // manually mounted instance, call mounted on self
   // mounted is called for render-created child components in its inserted hook
+  // 为null时 表示是根实例
   if (vm.$vnode == null) {
     vm._isMounted = true
     callHook(vm, 'mounted') // 执行 mounted 钩子函数
@@ -359,6 +361,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+// 在当前vue组件实例中，调用某个生命周期钩子注册的所有回调函数。
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   // 避免在某些生命周期钩子中使用 props 数据导致收集冗余的依赖
