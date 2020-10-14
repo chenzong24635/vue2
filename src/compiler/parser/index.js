@@ -757,12 +757,14 @@ function processComponent (el) {
   }
 }
 
+//解析属性
 function processAttrs (el) {
   const list = el.attrsList
   let i, l, name, rawName, value, modifiers, syncGen, isDynamic
   for (i = 0, l = list.length; i < l; i++) {
     name = rawName = list[i].name
     value = list[i].value
+    //如果该属性以v-、@或:开头，表示这是Vue内部指令
     if (dirRE.test(name)) {
       // mark element as dynamic
       el.hasBindings = true
@@ -775,6 +777,7 @@ function processAttrs (el) {
       } else if (modifiers) {
         name = name.replace(modifierRE, '')
       }
+      // 该属性是v-bind指令时
       if (bindRE.test(name)) { // v-bind
         name = name.replace(bindRE, '')
         value = parseFilters(value)

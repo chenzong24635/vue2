@@ -575,8 +575,8 @@ export function createPatchFunction (backend) {
       i(oldVnode, vnode)
     }
 
-    const oldCh = oldVnode.children
-    const ch = vnode.children
+    const oldCh = oldVnode.children // 旧节点children
+    const ch = vnode.children // 新节点children
     //执行属性，事件，样式等更新操作
     if (isDef(data) && isPatchable(vnode)) {
       for (i = 0; i < cbs.update.length; ++i) cbs.update[i](oldVnode, vnode)
@@ -585,7 +585,7 @@ export function createPatchFunction (backend) {
 
     // 开始判断vnode的子节点的各种情况
 
-    // 如果vnode没有text文本
+    // 如果vnode不是text文本
     if (isUndef(vnode.text)) {
       if (isDef(oldCh) && isDef(ch)) {
         // 新旧 vnode 的 children 均存在
@@ -596,7 +596,7 @@ export function createPatchFunction (backend) {
         if (process.env.NODE_ENV !== 'production') {
           checkDuplicateKeys(ch)
         }
-        // 清空文本内容，
+        // 清空文本内容，（如果旧oldVnode存在文本，先清空）
         if (isDef(oldVnode.text)) nodeOps.setTextContent(elm, '')
         // 加入 子节点
         addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue)
@@ -611,7 +611,7 @@ export function createPatchFunction (backend) {
         nodeOps.setTextContent(elm, '')
       }
     } else if (oldVnode.text !== vnode.text) {
-      // 如果新vnode存在text文本，但与旧vnode不同，则直接替换文本
+      // 如果新vnode是text文本，但与旧vnode不同（或oldVnode不是文本），则直接替换文本
       nodeOps.setTextContent(elm, vnode.text)
     }
     //调用postpatch钩子

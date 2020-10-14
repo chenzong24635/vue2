@@ -50,7 +50,7 @@ export class Observer {
 
     // 给监测对象添加 __ob__ 属性，并设为不可枚举（防止等会递归监测数据时 进入死循环）
     // 在 observe的时候会先检测是否已经有__ob__，有则表示已监测
-    def(value, '__ob__', this)
+    def(value, '__ob__', this)// def是Object.defineProperty 函数的简单封装
 
     // 如果对数组每项都进行监测，过于消耗性能；直接更改数组索引方式不多
     // 因此对数组的监测， 使用函数劫持
@@ -62,6 +62,7 @@ export class Observer {
         // 如果不支持该属性，则直接覆盖数组对象的原型。
         copyAugment(value, arrayMethods, arrayKeys)
       }
+       // 对一个数组的每一个成员进行observe，因为数组的值可能也是对象
       this.observeArray(value)
     } else {
       // 是对象则直接walk进行绑定
@@ -86,7 +87,6 @@ export class Observer {
   /**
    * Observe a list of Array items.
    */
-  // 对一个数组的每一个成员进行observe，因为数组的值可能也是对象
   observeArray(items: Array < any > ) {
     for (let i = 0, l = items.length; i < l; i++) {
       observe(items[i])
@@ -174,7 +174,7 @@ export function defineReactive(
   key: string,
   val: any,
   customSetter ? : ? Function,
-  shallow ? : boolean
+  shallow ? : boolean // 是否浅监测（默认false，深度监测）（对$attrs，$listeners属性浅监测 src\core\instance\render.js）
 ) {
   // 存储 属性所有的依赖
   const dep = new Dep()
@@ -197,6 +197,11 @@ export function defineReactive(
   }
   // 对象深度监测（对象的键值 可能也是对象，也需要监测）
   let childOb = !shallow && observe(val)
+  /*例子
+    data = {a:{b:1}}
+    此时a引用的 childOb 相当于 data.a.ob
+    而b引用的 childOb 是 undefined，因为其是基本类型
+   */
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
@@ -207,9 +212,26 @@ export function defineReactive(
       // Dep.target（watcher 实例） 通过 watch.js 的 Watcher 的get里调用 pushTarget（dep.js） 函数定义
       // 如果Dep.target 存在，收集依赖
       if (Dep.target) {
-        dep.depend()
+        // 此处 key属性 通过闭包引用了 dep
+        dep.depend()//（depend方法调用watcher的addDep方法收集依赖 --观察者模式）
         if (childOb) {
-          childOb.dep.depend() // 调用 dep.depend 方法收集依赖
+          childOb.dep.depend()
+          // childOb.dep.depend()作用？？
+
+          // 由上例子可知，data = {a:{b:1}}时， a引用的 childOb 相当于 data.a.ob
+          // 即 data.a.ob.dep.depend()
+          /*
+            为什么要将同样的依赖分别收集到这两个不同的”筐“里呢？
+            两个”筐“如下：
+              第一个”筐“是 dep
+              第二个”筐“是 childOb.dep
+
+            答案就在于这两个”筐“里收集的依赖的触发时机是不同的，即作用不同，
+              第一个”筐“里收集的依赖的触发时机是当属性值被修改时触发，即在 set 函数中触发：dep.notify()。
+              第二个”筐“里收集的依赖的触发时机是在使用 $set 或 Vue.set 给数据对象添加新属性时触发，
+          */
+
+
           // 如果读取的属性值是数组，那么需要调用 dependArray 函数逐个触发数组每个元素的依赖收集
           if (Array.isArray(value)) {
             dependArray(value)
@@ -219,6 +241,7 @@ export function defineReactive(
       return value
     },
     set: function reactiveSetter(newVal) {
+      // 取得属性原有的值,用于新的值作比较
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
       // 设置的新值没有改变时 或 新旧值都为 NaN 时，直接返回
@@ -231,15 +254,15 @@ export function defineReactive(
       }
       // #7981: for accessor properties without setter
       if (getter && !setter) return
-      if (setter) { // 如果属性自身拥有 set 函数，使用set该函数设置属性值
+      if (setter) { // 如果属性自身拥有 set 函数，使用set该函数设置属性值，从而保证属性原有的设置操作不受影响
         setter.call(obj, newVal)
-      } else { // 如果属性原本就没有 set 函数，那么就设置 val 的值
+      } else { // 如果属性原本就没有 set 函数，那么就直接设置 val 的值
         val = newVal
       }
       // 对象深度监测（设置的新值 可能也是对象，也需要监测）
       childOb = !shallow && observe(newVal)
       // 设置属性时 触发依赖
-      dep.notify()
+      dep.notify()//notify调用 watcher update方法  --观察者模式
     }
   })
 }

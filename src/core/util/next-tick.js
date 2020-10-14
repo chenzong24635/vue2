@@ -7,13 +7,15 @@ import { isIE, isIOS, isNative } from './env'
 
 export let isUsingMicroTask = false
 
-const callbacks = []
-let pending = false
+const callbacks = [] //存放需要异步执行的函数队列
+let pending = false // 标记是否已经命令callbacks在下个tick全部执行，防止多次调用。
 
 function flushCallbacks () {
   pending = false
-  const copies = callbacks.slice(0)
-  callbacks.length = 0
+  const copies = callbacks.slice(0) //一层深拷贝
+  callbacks.length = 0 // 清空数组
+  // 以上代码是为了在nextTick的方法里再次调用nextTick，能够新开一个异步队列
+
   for (let i = 0; i < copies.length; i++) {
     copies[i]()
   }

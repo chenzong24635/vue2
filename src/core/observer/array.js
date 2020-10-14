@@ -4,9 +4,9 @@
  */
 
 import { def } from '../util/index'
-
+// 缓存了数组原本属性方法
 const arrayProto = Array.prototype
-    // 创建新对象存储数组原型的属性方法，避免污染原生数组属性方法
+// 创建新对象存储数组原型的属性方法，避免污染原生数组属性方法
 export const arrayMethods = Object.create(arrayProto)
 
 const methodsToPatch = [
@@ -48,8 +48,8 @@ methodsToPatch.forEach(function(method) {
         }
         // 对新增的元素 进行监测
         if (inserted) ob.observeArray(inserted)
-            // notify change
-            // 通知所有注册的观察者进行响应式处理
+        // notify change
+        // 通知所有注册的观察者进行响应式处理
         ob.dep.notify()
         return result
     })
