@@ -72,7 +72,7 @@ export default class Watcher {
     }
     this.cb = cb
     this.id = ++uid // uid for batching
-    this.active = true
+    this.active = true // wather是否激活绑定，要解除绑定时设为false
     this.dirty = this.lazy // for lazy watchers 计算属性是惰性求值
     this.deps = []
     this.newDeps = []
@@ -86,6 +86,7 @@ export default class Watcher {
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
+      // 自定义的 watch的expOrFn应该是个key 或者 'a.b.c'这样的访问路径
       this.getter = parsePath(expOrFn)
       if (!this.getter) {
         this.getter = noop
@@ -135,6 +136,7 @@ export default class Watcher {
       if (this.deep) {
         traverse(value)
       }
+      // 收集完后去除
       popTarget()
       // 清空 newDepIds 属性和 newDeps
       this.cleanupDeps()
@@ -151,10 +153,11 @@ export default class Watcher {
     // 防止重复收集依赖
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
-      this.newDeps.push(dep)
+      this.newDeps.push(dep) // 当前的watcher收集dep
       if (!this.depIds.has(id)) { // 多次求值中避免收集重复依赖的
-        dep.addSub(this) // 添加 watcher
+        dep.addSub(this) // 当前的dep收集当前的watcer
       }
+      // 双向保存
     }
   }
 
@@ -202,6 +205,7 @@ export default class Watcher {
    * Will be called by the scheduler.
    */
   run () {
+    // 如果watch未解除绑定
     if (this.active) {
       const value = this.get()
 
@@ -226,8 +230,8 @@ export default class Watcher {
         this.deep
       ) {
         // set new value
-        const oldValue = this.value
-        this.value = value // 设置新的值
+        const oldValue = this.value // 存储旧值
+        this.value = value // 设置新值
         // 触发回调
         if (this.user) { // 这个观察者是用户定义的
           try {
@@ -248,6 +252,7 @@ export default class Watcher {
    */
   // 在src\core\instance\state.js
   // createComputedGetter里触发
+  // 专为 computed的watcher 设计的求值函数
   evaluate () {
     this.value = this.get()
     this.dirty = false

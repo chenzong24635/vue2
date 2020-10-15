@@ -72,14 +72,24 @@ export function initMixin (Vue: Class<Component>) {
     // 调用 beforeCreate 钩子
     callHook(vm, 'beforeCreate')
 
-    //注入数据并做响应化（在data，prop属性初始化之前
+    //inject注入数据（在data，prop属性初始化之前
     initInjections(vm) // resolve injections before data/props
+    // 为什么可以在initProvide之前？
+    // initInjections获取的是父组件的 provide属性
+    /* 组件渲染顺序为：
+      父beforeCreate - 父created -父beforeMount
+      子beforeCreate - 子created -子beforeMount -子mounted
+      父mounted
+    */
+    // 因此，在子组件执行initInjections时，父组件的initProvide已执行
 
     //初始化props,methods,data,computed,watch
     initState(vm)
 
-    //处理注入数据（在data，prop属性初始化之后
+    //提供数据（在data，prop属性初始化之后
     initProvide(vm) // resolve provide after data/props
+    // 为什么initProvide放在 initState之后？
+    // 可以获取 data里的属性
 
     // 调用 created 钩子
     callHook(vm, 'created')

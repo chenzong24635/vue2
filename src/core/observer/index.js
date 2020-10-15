@@ -174,7 +174,7 @@ export function defineReactive(
   key: string,
   val: any,
   customSetter ? : ? Function,
-  shallow ? : boolean // 是否浅监测（默认false，深度监测）（对$attrs，$listeners属性浅监测 src\core\instance\render.js）
+  shallow ? : boolean // 是否浅监测（默认false，深度监测）（对$attrs，$listeners属性浅监测（其值已经是响应式了） src\core\instance\render.js）
 ) {
   // 存储 属性所有的依赖
   const dep = new Dep()

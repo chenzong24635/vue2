@@ -82,11 +82,22 @@ function initProps (vm: Component, propsOptions: Object) {
   const keys = vm.$options._propKeys = []
   const isRoot = !vm.$parent
   // root instance props should be converted
+  // 非根实例，属性无需响应式转换
   if (!isRoot) {
     toggleObserving(false)
   }
+  // propsOptions是对传入props的校验,如：
+  /*
+    props:{
+      count: {
+        type: Number,
+        default: 1
+      }
+    }
+  */
   for (const key in propsOptions) {
     keys.push(key)
+    // 校验，获取
     const value = validateProp(key, propsOptions, propsData, vm)
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
@@ -209,10 +220,11 @@ function initComputed (vm: Component, computed: Object) {
 
     if (!isSSR) {
       // create internal watcher for the computed property.
+
       watchers[key] = new Watcher(
         vm,
         getter || noop, // 用户传入的求值函数
-        noop, // 回调函数
+        noop, // 回调函数 computed watch没有回调函数
         computedWatcherOptions // 声明 lazy 属性 标记 computed watcher
       )
     }
@@ -320,9 +332,23 @@ function initMethods (vm: Component, methods: Object) {
 }
 
 function initWatch (vm: Component, watch: Object) {
+  // 遍历用户定义的watch
   for (const key in watch) {
     const handler = watch[key]
+    // 如果watch是数组(watch监听属性变化时，可以执行多个方法)
     if (Array.isArray(handler)) {
+      /* 例
+        watch: {
+          name: [ // name改变时，执行了三个方法
+            'sayName1',
+            function(newVal, oldVal) {},
+            {
+              handler: 'sayName3',
+              immediate: true
+            }
+          ]
+        },
+      */
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i])
       }
@@ -338,23 +364,21 @@ function createWatcher (
   handler: any,
   options?: Object
 ) {
-  // 为普通对象时
+  // 对handler参数进行了规范化
+  // handler为普通对象时
   if (isPlainObject(handler)) {
     options = handler
     handler = handler.handler
   }
   /* 例
   watch: {
-    'name':
-    {
-      handler () {
-        console.log('name change')
-      },
+    'name':{
+      handler () {},
       immediate: true
     }
   */
 
-  // 为字符串时,指向 methods 选项中同名函数作为回调函数
+  // handler为字符串时,指向 methods 选项中同名函数作为回调函数
   if (typeof handler === 'string') {
     handler = vm[handler]
   }
@@ -403,7 +427,7 @@ export function stateMixin (Vue: Class<Component>) {
 
   Vue.prototype.$watch = function (
     expOrFn: string | Function,
-    cb: any,
+    cb: any, // handler 回调函数(监听值改变时会调用)
     options?: Object
   ): Function {
     const vm: Component = this

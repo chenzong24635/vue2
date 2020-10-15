@@ -22,7 +22,7 @@ function Vue (options) {
 
 // 在Vue.prototype上挂载方法
 initMixin(Vue) // 实现上面的Vue函数的 _init 这个初始化方法
-stateMixin(Vue) // 实现$data，$props, $watch,$set,$delete
+stateMixin(Vue) // 实现$data,$props,$set,$delete, $watch
 eventsMixin(Vue) // 实现$on,$emit,$once,$off
 lifecycleMixin(Vue) // 实现_update，$forceUpdate,$destroy
 renderMixin(Vue) // 实现$nextTick，_render

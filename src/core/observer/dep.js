@@ -63,12 +63,14 @@ export default class Dep {
 Dep.target = null
 const targetStack = []
 
+// push当前watcher到stack 中，并记录当前watcer
 export function pushTarget (target: ?Watcher) {
   targetStack.push(target)
   // Dep.target 保存着一个观察者对象，这个观察者对象就是即将要收集的目标。
   Dep.target = target
 }
 
+// 移除当前watcher
 export function popTarget () {
   targetStack.pop()
   Dep.target = targetStack[targetStack.length - 1]

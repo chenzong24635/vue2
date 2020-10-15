@@ -7,8 +7,22 @@ import { defineReactive, toggleObserving } from '../observer/index'
 export function initProvide (vm: Component) {
   const provide = vm.$options.provide
   if (provide) {
+    // provide可以是 函数或对象
+    /*
+      provide: {
+        name: 'tom',
+        obj: {num: 1}
+      }
+
+      provide() {
+        return {
+          name: this.name,
+          obj: this.obj
+        }
+      },
+    */
     vm._provided = typeof provide === 'function'
-      ? provide.call(vm)
+      ? provide.call(vm) // 函数执行获取返回值
       : provide
   }
 }
