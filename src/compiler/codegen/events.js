@@ -5,33 +5,35 @@ const fnInvokeRE = /\([^)]*?\);*$/
 const simplePathRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['[^']*?']|\["[^"]*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*$/
 
 // KeyboardEvent.keyCode aliases
-const keyCodes: { [key: string]: number | Array<number> } = {
-  esc: 27,
-  tab: 9,
-  enter: 13,
-  space: 32,
-  up: 38,
-  left: 37,
-  right: 39,
-  down: 40,
-  'delete': [8, 46]
+const keyCodes: {
+    [key: string]: number | Array < number > } = {
+    esc: 27,
+    tab: 9,
+    enter: 13,
+    space: 32,
+    up: 38,
+    left: 37,
+    right: 39,
+    down: 40,
+    'delete': [8, 46]
 }
 
 // KeyboardEvent.key aliases
-const keyNames: { [key: string]: string | Array<string> } = {
-  // #7880: IE11 and Edge use `Esc` for Escape key name.
-  esc: ['Esc', 'Escape'],
-  tab: 'Tab',
-  enter: 'Enter',
-  // #9112: IE11 uses `Spacebar` for Space key name.
-  space: [' ', 'Spacebar'],
-  // #7806: IE11 uses key names without `Arrow` prefix for arrow keys.
-  up: ['Up', 'ArrowUp'],
-  left: ['Left', 'ArrowLeft'],
-  right: ['Right', 'ArrowRight'],
-  down: ['Down', 'ArrowDown'],
-  // #9112: IE11 uses `Del` for Delete key name.
-  'delete': ['Backspace', 'Delete', 'Del']
+const keyNames: {
+    [key: string]: string | Array < string > } = {
+    // #7880: IE11 and Edge use `Esc` for Escape key name.
+    esc: ['Esc', 'Escape'],
+    tab: 'Tab',
+    enter: 'Enter',
+    // #9112: IE11 uses `Spacebar` for Space key name.
+    space: [' ', 'Spacebar'],
+    // #7806: IE11 uses key names without `Arrow` prefix for arrow keys.
+    up: ['Up', 'ArrowUp'],
+    left: ['Left', 'ArrowLeft'],
+    right: ['Right', 'ArrowRight'],
+    down: ['Down', 'ArrowDown'],
+    // #9112: IE11 uses `Del` for Delete key name.
+    'delete': ['Backspace', 'Delete', 'Del']
 }
 
 // #4868: modifiers that prevent the execution of the listener
@@ -39,88 +41,90 @@ const keyNames: { [key: string]: string | Array<string> } = {
 // the listener for .once
 const genGuard = condition => `if(${condition})return null;`
 
-const modifierCode: { [key: string]: string } = {
-  stop: '$event.stopPropagation();',
-  prevent: '$event.preventDefault();',
-  self: genGuard(`$event.target !== $event.currentTarget`),
-  ctrl: genGuard(`!$event.ctrlKey`),
-  shift: genGuard(`!$event.shiftKey`),
-  alt: genGuard(`!$event.altKey`),
-  meta: genGuard(`!$event.metaKey`),
-  left: genGuard(`'button' in $event && $event.button !== 0`),
-  middle: genGuard(`'button' in $event && $event.button !== 1`),
-  right: genGuard(`'button' in $event && $event.button !== 2`)
+const modifierCode: {
+    [key: string]: string } = {
+    stop: '$event.stopPropagation();',
+    prevent: '$event.preventDefault();',
+    self: genGuard(`$event.target !== $event.currentTarget`),
+    ctrl: genGuard(`!$event.ctrlKey`),
+    shift: genGuard(`!$event.shiftKey`),
+    alt: genGuard(`!$event.altKey`),
+    meta: genGuard(`!$event.metaKey`),
+    left: genGuard(`'button' in $event && $event.button !== 0`),
+    middle: genGuard(`'button' in $event && $event.button !== 1`),
+    right: genGuard(`'button' in $event && $event.button !== 2`)
 }
 
-export function genHandlers (
-  events: ASTElementHandlers,
-  isNative: boolean
+export function genHandlers(
+    events: ASTElementHandlers,
+    isNative: boolean
 ): string {
-  const prefix = isNative ? 'nativeOn:' : 'on:'
-  let staticHandlers = ``
-  let dynamicHandlers = ``
-  for (const name in events) {
-    const handlerCode = genHandler(events[name])
-    if (events[name] && events[name].dynamic) {
-      dynamicHandlers += `${name},${handlerCode},`
-    } else {
-      staticHandlers += `"${name}":${handlerCode},`
+    const prefix = isNative ? 'nativeOn:' : 'on:'
+    let staticHandlers = ``
+    let dynamicHandlers = ``
+    for (const name in events) {
+        const handlerCode = genHandler(events[name])
+        if (events[name] && events[name].dynamic) {
+            dynamicHandlers += `${name},${handlerCode},`
+        } else {
+            staticHandlers += `"${name}":${handlerCode},`
+        }
     }
-  }
-  staticHandlers = `{${staticHandlers.slice(0, -1)}}`
-  if (dynamicHandlers) {
-    return prefix + `_d(${staticHandlers},[${dynamicHandlers.slice(0, -1)}])`
-  } else {
-    return prefix + staticHandlers
-  }
+    staticHandlers = `{${staticHandlers.slice(0, -1)}}`
+    if (dynamicHandlers) {
+        return prefix + `_d(${staticHandlers},[${dynamicHandlers.slice(0, -1)}])`
+    } else {
+        return prefix + staticHandlers
+    }
 }
 
 // Generate handler code with binding params on Weex
 /* istanbul ignore next */
-function genWeexHandler (params: Array<any>, handlerCode: string) {
-  let innerHandlerCode = handlerCode
-  const exps = params.filter(exp => simplePathRE.test(exp) && exp !== '$event')
-  const bindings = exps.map(exp => ({ '@binding': exp }))
-  const args = exps.map((exp, i) => {
-    const key = `$_${i + 1}`
-    innerHandlerCode = innerHandlerCode.replace(exp, key)
-    return key
-  })
-  args.push('$event')
-  return '{\n' +
-    `handler:function(${args.join(',')}){${innerHandlerCode}},\n` +
-    `params:${JSON.stringify(bindings)}\n` +
-    '}'
+function genWeexHandler(params: Array < any > , handlerCode: string) {
+    let innerHandlerCode = handlerCode
+    const exps = params.filter(exp => simplePathRE.test(exp) && exp !== '$event')
+    const bindings = exps.map(exp => ({ '@binding': exp }))
+    const args = exps.map((exp, i) => {
+        const key = `$_${i + 1}`
+        innerHandlerCode = innerHandlerCode.replace(exp, key)
+        return key
+    })
+    args.push('$event')
+    return '{\n' +
+        `handler:function(${args.join(',')}){${innerHandlerCode}},\n` +
+        `params:${JSON.stringify(bindings)}\n` +
+        '}'
 }
 
-function genHandler (handler: ASTElementHandler | Array<ASTElementHandler>): string {
-  if (!handler) {
-    return 'function(){}'
-  }
-
-  if (Array.isArray(handler)) {
-    return `[${handler.map(handler => genHandler(handler)).join(',')}]`
-  }
-
-  const isMethodPath = simplePathRE.test(handler.value)
-  const isFunctionExpression = fnExpRE.test(handler.value)
-  const isFunctionInvocation = simplePathRE.test(handler.value.replace(fnInvokeRE, ''))
-
-  if (!handler.modifiers) {
-    if (isMethodPath || isFunctionExpression) {
-      return handler.value
+function genHandler(handler: ASTElementHandler | Array < ASTElementHandler > ): string {
+    if (!handler) {
+        return 'function(){}'
     }
-    /* istanbul ignore if */
-    if (__WEEX__ && handler.params) {
-      return genWeexHandler(handler.params, handler.value)
+
+    if (Array.isArray(handler)) {
+        return `[${handler.map(handler => genHandler(handler)).join(',')}]`
     }
-    return `function($event){${
+
+    const isMethodPath = simplePathRE.test(handler.value)
+    const isFunctionExpression = fnExpRE.test(handler.value)
+    const isFunctionInvocation = simplePathRE.test(handler.value.replace(fnInvokeRE, ''))
+
+    if (!handler.modifiers) {
+        if (isMethodPath || isFunctionExpression) {
+            return handler.value
+        }
+        /* istanbul ignore if */
+        if (__WEEX__ && handler.params) {
+            return genWeexHandler(handler.params, handler.value)
+        }
+        return `function($event){${
       isFunctionInvocation ? `return ${handler.value}` : handler.value
     }}` // inline statement
   } else {
     let code = ''
     let genModifierCode = ''
-    const keys = []
+    const keys = []// 存储当前事件拥有的修饰符对应的处理
+    // 循环判断 事件里是否存在 modifierCode 定义的修饰符
     for (const key in handler.modifiers) {
       if (modifierCode[key]) {
         genModifierCode += modifierCode[key]
@@ -158,6 +162,13 @@ function genHandler (handler: ASTElementHandler | Array<ASTElementHandler>): str
     if (__WEEX__ && handler.params) {
       return genWeexHandler(handler.params, code + handlerCode)
     }
+    // 重新包装原始方法
+    // 先执行修饰符对应的事件处理，在执行方法
+    /* 例 @click.stop="fn"
+      code 对应 $event.stopPropagation();
+      handlerCode对应 fn
+     */
+    // 因此方法获取事件属性时参数定义名必须为$event（@click.stop="fn($event)"）
     return `function($event){${code}${handlerCode}}`
   }
 }
