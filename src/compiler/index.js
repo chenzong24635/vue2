@@ -25,6 +25,7 @@ export const createCompiler = createCompilerCreator(function baseCompile(
     if (options.optimize !== false) {
         optimize(ast, options)
     }
+    // 生成render函数字符串
     const code = generate(ast, options)
     return {
         ast,

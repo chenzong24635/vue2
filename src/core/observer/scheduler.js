@@ -87,6 +87,9 @@ function flushSchedulerQueue () {
   // as we run existing watchers
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
+    // 如果存在 before则调用
+    // 在src\core\instance\lifecycle.js的mountComponent方法里
+    // 创建watcher实例时会添加 before 方法来调用 callHook(vm, 'beforeUpdate')
     if (watcher.before) {
       watcher.before()
     }
@@ -130,6 +133,8 @@ function flushSchedulerQueue () {
 
 function callUpdatedHooks (queue) {
   let i = queue.length
+  // 从后往前调用 updated 钩子
+  // 子 -> 父
   while (i--) {
     const watcher = queue[i]
     const vm = watcher.vm

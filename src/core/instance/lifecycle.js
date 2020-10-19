@@ -97,6 +97,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // updated in a parent's updated hook.
   }
 
+  // 页面重新渲染
   Vue.prototype.$forceUpdate = function () {
     const vm: Component = this
     if (vm._watcher) {

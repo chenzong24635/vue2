@@ -290,6 +290,7 @@ export function defineReactive(
  * already exist.
  */
 export function set(target: Array < any > | Object, key: any, val: any): any {
+  // 判断target 为 undefined 或 null 或基本类型，报错
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
@@ -303,7 +304,7 @@ export function set(target: Array < any > | Object, key: any, val: any): any {
     target.splice(key, 1, val)
     return val
   }
-  // target为对象, 且key在target或者target.prototype上 且必须不能在 Object.prototype 上,直接赋值
+  // target 为对象,且自身拥有该属性（排除Object.prototype属性constructor等）,直接赋值
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
@@ -317,7 +318,8 @@ export function set(target: Array < any > | Object, key: any, val: any): any {
       'at runtime - declare it upfront in the data option.'
       )
       return val
-    }
+  }
+  // target上不存在该属性
   // target 本身就不是响应式数据, 直接赋值
   if (!ob) {
     target[key] = val
