@@ -26,45 +26,52 @@ import {
   makeMap,
   isRegExp,
   isPrimitive
+    warn,
+    isDef,
+    isUndef,
+    isTrue,
+    makeMap,
+    isRegExp,
+    isPrimitive
 } from '../util/index'
 
 export const emptyNode = new VNode('', {}, [])
 
 const hooks = ['create', 'activate', 'update', 'remove', 'destroy']
 
-function sameVnode (a, b) {
-  return (
-    a.key === b.key && (
-      (
-        a.tag === b.tag &&
-        a.isComment === b.isComment &&
-        isDef(a.data) === isDef(b.data) &&
-        sameInputType(a, b)
-      ) || (
-        isTrue(a.isAsyncPlaceholder) &&
-        a.asyncFactory === b.asyncFactory &&
-        isUndef(b.asyncFactory.error)
-      )
+function sameVnode(a, b) {
+    return (
+        a.key === b.key && (
+            (
+                a.tag === b.tag &&
+                a.isComment === b.isComment &&
+                isDef(a.data) === isDef(b.data) &&
+                sameInputType(a, b)
+            ) || (
+                isTrue(a.isAsyncPlaceholder) &&
+                a.asyncFactory === b.asyncFactory &&
+                isUndef(b.asyncFactory.error)
+            )
+        )
     )
-  )
 }
 
-function sameInputType (a, b) {
-  if (a.tag !== 'input') return true
-  let i
-  const typeA = isDef(i = a.data) && isDef(i = i.attrs) && i.type
-  const typeB = isDef(i = b.data) && isDef(i = i.attrs) && i.type
-  return typeA === typeB || isTextInputType(typeA) && isTextInputType(typeB)
+function sameInputType(a, b) {
+    if (a.tag !== 'input') return true
+    let i
+    const typeA = isDef(i = a.data) && isDef(i = i.attrs) && i.type
+    const typeB = isDef(i = b.data) && isDef(i = i.attrs) && i.type
+    return typeA === typeB || isTextInputType(typeA) && isTextInputType(typeB)
 }
 
-function createKeyToOldIdx (children, beginIdx, endIdx) {
-  let i, key
-  const map = {}
-  for (i = beginIdx; i <= endIdx; ++i) {
-    key = children[i].key
-    if (isDef(key)) map[key] = i
-  }
-  return map
+function createKeyToOldIdx(children, beginIdx, endIdx) {
+    let i, key
+    const map = {}
+    for (i = beginIdx; i <= endIdx; ++i) {
+        key = children[i].key
+        if (isDef(key)) map[key] = i
+    }
+    return map
 }
 
 // diff新旧元素

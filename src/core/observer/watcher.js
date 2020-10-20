@@ -156,7 +156,7 @@ export default class Watcher {
       this.newDepIds.add(id)
       // 当前的watcher收集dep
       // 之后会进行处理（cleanupDeps），就会将所有新的依赖添加到真正的 deps 数组中，这里的 newDeps 是起缓冲的作用的
-      this.newDeps.push(dep)
+      this.newDeps.push(dep) // 当前的watcher收集dep
       if (!this.depIds.has(id)) { // 多次求值中避免收集重复依赖的
         dep.addSub(this) // 当前的dep收集当前的watcer
       }

@@ -83,6 +83,80 @@ export function genElement (el: ASTElement, state: CodegenState): string {
 
       const children = el.inlineTemplate ? null : genChildren(el, state, true)
       code = `_c('${el.tag}'${
+    options: CompilerOptions;
+    warn: Function;
+    transforms: Array < TransformFunction > ;
+    dataGenFns: Array < DataGenFunction > ;
+    directives: {
+        [key: string]: DirectiveFunction
+    };
+    maybeComponent: (el: ASTElement) => boolean;
+    onceId: number;
+    staticRenderFns: Array < string > ;
+    pre: boolean;
+
+    constructor(options: CompilerOptions) {
+        this.options = options
+        this.warn = options.warn || baseWarn
+        this.transforms = pluckModuleFunction(options.modules, 'transformCode')
+        this.dataGenFns = pluckModuleFunction(options.modules, 'genData')
+        this.directives = extend(extend({}, baseDirectives), options.directives)
+        const isReservedTag = options.isReservedTag || no
+        this.maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
+        this.onceId = 0
+        this.staticRenderFns = []
+        this.pre = false
+    }
+}
+
+export type CodegenResult = {
+    render: string,
+    staticRenderFns: Array < string >
+};
+
+export function generate(
+    ast: ASTElement | void,
+    options: CompilerOptions
+): CodegenResult {
+    const state = new CodegenState(options)
+    const code = ast ? genElement(ast, state) : '_c("div")'
+    return {
+        render: `with(this){return ${code}}`,
+        staticRenderFns: state.staticRenderFns
+    }
+}
+
+// 各个指令对应的转换逻辑
+export function genElement(el: ASTElement, state: CodegenState): string {
+    if (el.parent) {
+        el.pre = el.pre || el.parent.pre
+    }
+
+    if (el.staticRoot && !el.staticProcessed) { // 静态节点
+        return genStatic(el, state)
+    } else if (el.once && !el.onceProcessed) { // v-once 处理
+        return genOnce(el, state)
+    } else if (el.for && !el.forProcessed) { // v-for 处理
+        return genFor(el, state)
+    } else if (el.if && !el.ifProcessed) { // v-if 处理
+        return genIf(el, state)
+    } else if (el.tag === 'template' && !el.slotTarget && !state.pre) { // template 根节点处理
+        return genChildren(el, state) || 'void 0'
+    } else if (el.tag === 'slot') { // slot 节点处理
+        return genSlot(el, state)
+    } else {
+        // component or element
+        let code
+        if (el.component) {
+            code = genComponent(el.component, el, state)
+        } else {
+            let data
+            if (!el.plain || (el.pre && state.maybeComponent(el))) {
+                data = genData(el, state)
+            }
+
+            const children = el.inlineTemplate ? null : genChildren(el, state, true)
+            code = `_c('${el.tag}'${
         data ? `,${data}` : '' // data
       }${
         children ? `,${children}` : '' // children
@@ -164,7 +238,10 @@ function genIfConditions (
   }
 
   const condition = conditions.shift()
+  // 如果有正则表达式
+  // v-if,v-else, v-else
   if (condition.exp) {
+    // 拼接三元表达式
     return `(${condition.exp})?${
       genTernaryExp(condition.block)
     }:${

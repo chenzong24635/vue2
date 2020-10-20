@@ -30,6 +30,7 @@ export function initExtend (Vue: GlobalAPI) {
       validateComponentName(name)
     }
     // 如果遇到 子组件，那么就会优先开始子组件的构建
+
     const Sub = function VueComponent (options) {
       this._init(options)
     }
