@@ -81,6 +81,11 @@ function flushSchedulerQueue () {
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
+  //刷新前对队列排序。
+  //这样可以确保：
+  //1。组件从父级更新到子级。（因为父母总是在孩子之前创建）
+  //2。组件的用户观察器在其渲染观察器之前运行（因为用户观察程序在渲染观察程序之前创建）
+  //3。如果某个组件在父组件的观察程序运行期间被销毁，它的观察者可以跳过
   queue.sort((a, b) => a.id - b.id)
 
   // do not cache length because more watchers might be pushed

@@ -286,9 +286,11 @@ function createComputedGetter (key) {
   return function computedGetter () {
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
+      // 数据是否需要更新
       if (watcher.dirty) {
         watcher.evaluate()
       }
+      // 执行依赖收集
       if (Dep.target) {
         watcher.depend()
       }

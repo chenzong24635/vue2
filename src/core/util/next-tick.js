@@ -94,16 +94,20 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 }
 
+// cb回调函数
+// ctx回调函数的执行上下文
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
   callbacks.push(() => {
     if (cb) {
+      // 执行回调函数
       try {
         cb.call(ctx)
       } catch (e) {
         handleError(e, ctx, 'nextTick')
       }
     } else if (_resolve) {
+      //触发promise的then回调
       _resolve(ctx)
     }
   })
@@ -112,6 +116,7 @@ export function nextTick (cb?: Function, ctx?: Object) {
     timerFunc()  // 执行时会调用flushCallbacks， 将pending设为false
   }
   // $flow-disable-line
+  //如果没有传递回调函数,并且当前浏览器支持promise,使用promise实现
   if (!cb && typeof Promise !== 'undefined') {
     return new Promise(resolve => {
       _resolve = resolve
@@ -120,9 +125,9 @@ export function nextTick (cb?: Function, ctx?: Object) {
 }
 
 // nextTick主要使用了宏任务和微任务。根据执行环境分别尝试采用
-// * Promise
-// * MutationObserver
-// * setImmediate
+// * Promise.then
+// * [MutationObserver](https://developer.mozilla.org/zh-CN/docs/Web/API/MutationObserver)
+// * [setImmediate](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/setImmediate) (只有最新版本的 Internet Explorer 和Node.js 0.10+实现了该方法)
 // * 以上都不支持，最后再使用 setTimeout
 
 // 任务队列总体可分为 宏任务 (macro)task，微任务 microtask
