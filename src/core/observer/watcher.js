@@ -44,7 +44,7 @@ export default class Watcher {
 
   constructor (
     vm: Component,
-    expOrFn: string | Function,
+    expOrFn: string | Function,// 渲染时传入updateComponent（src\core\instance\lifecycle.js）
     cb: Function,
     options?: ?Object,
     isRenderWatcher?: boolean
@@ -136,7 +136,7 @@ export default class Watcher {
       if (this.deep) {
         traverse(value)
       }
-      // 收集完后去除
+      // 收集完后清除当前依赖
       popTarget()
       // 将newDeps 赋予 deps
       // 清空 newDepIds 属性和 newDeps
@@ -158,7 +158,7 @@ export default class Watcher {
       // 之后会进行处理（cleanupDeps），就会将所有新的依赖添加到真正的 deps 数组中，这里的 newDeps 是起缓冲的作用的
       this.newDeps.push(dep) // 当前的watcher收集dep
       if (!this.depIds.has(id)) { // 多次求值中避免收集重复依赖的
-        dep.addSub(this) // 当前的dep收集当前的watcer
+        dep.addSub(this) // 当前的dep收集当前的watcher
       }
       // 双向保存
     }

@@ -297,20 +297,25 @@ export function looseEqual (a: any, b: any): boolean {
   if (a === b) return true
   const isObjectA = isObject(a)
   const isObjectB = isObject(b)
+  // 都为对象或数组
   if (isObjectA && isObjectB) {
     try {
       const isArrayA = Array.isArray(a)
       const isArrayB = Array.isArray(b)
-      if (isArrayA && isArrayB) {
+      if (isArrayA && isArrayB) { // 都为数组
+        // 判断数组长度且递归判断数组内容
         return a.length === b.length && a.every((e, i) => {
+          // 递归
           return looseEqual(e, b[i])
         })
-      } else if (a instanceof Date && b instanceof Date) {
+      } else if (a instanceof Date && b instanceof Date) { // 都为Date
         return a.getTime() === b.getTime()
-      } else if (!isArrayA && !isArrayB) {
+      } else if (!isArrayA && !isArrayB) { // 都为对象
         const keysA = Object.keys(a)
         const keysB = Object.keys(b)
+        // 判断对象长度且递归判断对象内容
         return keysA.length === keysB.length && keysA.every(key => {
+          // 递归
           return looseEqual(a[key], b[key])
         })
       } else {
@@ -321,7 +326,7 @@ export function looseEqual (a: any, b: any): boolean {
       /* istanbul ignore next */
       return false
     }
-  } else if (!isObjectA && !isObjectB) {
+  } else if (!isObjectA && !isObjectB) { // 都为基本类型
     return String(a) === String(b)
   } else {
     return false
