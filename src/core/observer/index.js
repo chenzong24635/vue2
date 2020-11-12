@@ -210,7 +210,7 @@ export function defineReactive(
       const value = getter ? getter.call(obj) : val
       // 获取属性时，收集依赖
       // Dep.target（watcher 实例） 通过 watch.js 的 Watcher 的get里调用 pushTarget（dep.js） 函数定义
-      // 如果Dep.target 存在，收集依赖
+      // 如果 Dep.target 存在，收集依赖
       if (Dep.target) {
         // 此处 key属性 通过闭包引用了 dep
         dep.depend()//（depend方法调用watcher的addDep方法收集依赖 --观察者模式）
@@ -230,7 +230,6 @@ export function defineReactive(
               第一个”筐“里收集的依赖的触发时机是当属性值被修改时触发，即在 set 函数中触发：dep.notify()。
               第二个”筐“里收集的依赖的触发时机是在使用 $set 或 Vue.set 给数据对象添加新属性时触发，
           */
-
 
           // 如果读取的属性值是数组，那么需要调用 dependArray 函数逐个触发数组每个元素的依赖收集
           if (Array.isArray(value)) {

@@ -494,9 +494,11 @@ export function createPatchFunction (backend) {
     }
     // 对比结束后，判断是否还有剩余，
     if (oldStartIdx > oldEndIdx) {
+      // 旧节点先patch完了，肯还剩新节点，则添加
       refElm = isUndef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm
       addVnodes(parentElm, refElm, newCh, newStartIdx, newEndIdx, insertedVnodeQueue)
     } else if (newStartIdx > newEndIdx) {
+      // 新节点先patch完了，可能还有旧的节点没有被处理到。那么就会去删除多余的旧子节点。
       removeVnodes(oldCh, oldStartIdx, oldEndIdx)
     }
   }
@@ -605,7 +607,7 @@ export function createPatchFunction (backend) {
         }
         // 清空文本内容，（如果旧oldVnode存在文本，先清空）
         if (isDef(oldVnode.text)) nodeOps.setTextContent(elm, '')
-        // 加入 子节点
+        // 加入子节点
         addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue)
       } else if (isDef(oldCh)) {
         // 新vnode不存在，旧vnode存在children

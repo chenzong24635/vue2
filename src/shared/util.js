@@ -297,7 +297,7 @@ export function looseEqual (a: any, b: any): boolean {
   if (a === b) return true
   const isObjectA = isObject(a)
   const isObjectB = isObject(b)
-  // 都为对象或数组
+  // 都为对象类型
   if (isObjectA && isObjectB) {
     try {
       const isArrayA = Array.isArray(a)
@@ -327,6 +327,7 @@ export function looseEqual (a: any, b: any): boolean {
       return false
     }
   } else if (!isObjectA && !isObjectB) { // 都为基本类型
+    // 转换为字符串比较
     return String(a) === String(b)
   } else {
     return false
