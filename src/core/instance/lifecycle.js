@@ -221,6 +221,7 @@ export function mountComponent (
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
+  // 实例化一个渲染Watcher，在它的回调函数中会调用 updateComponent 方法
   new Watcher(vm, updateComponent, noop, {
     before () {
       // 先判断是否 mouted 完成 并且没有被 destroyed
